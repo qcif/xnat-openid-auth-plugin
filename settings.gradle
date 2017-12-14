@@ -1,0 +1,6 @@
+/*
+ * xnat-openid-plugin: settings.gradle
+
+ */
+
+rootProject.name = 'xnat-openid-auth-plugin'

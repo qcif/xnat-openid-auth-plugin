@@ -1,0 +1,10 @@
+*.iml
+*.log
+/.gradle*
+/.idea
+/build
+/out
+/target
+dep*.txt
+/bin/
+.settings
