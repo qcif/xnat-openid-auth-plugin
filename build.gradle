@@ -1,0 +1,195 @@
+/*
+ * xnat-openid-auth-plugin: build.gradle
+ *
+ */
+
+buildscript {
+    ext {
+        vXnat = '1.7.5-SNAPSHOT'
+    }
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url 'https://nrgxnat.jfrog.io/nrgxnat/libs-release'
+            name 'XNAT Release Repository'
+        }
+        maven {
+            url 'https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot'
+            name 'XNAT Snapshot Repository'
+        }
+    }
+    dependencies {
+        classpath "org.nrg.xnat.build:xnat-data-builder:${vXnat}"
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
+        classpath "gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.8.0"
+        classpath "io.franzbecker:gradle-lombok:1.10"
+    }
+}
+
+group 'au.edu.qcif.xnat.openid'
+version '1.0.0-SNAPSHOT'
+
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'io.franzbecker.gradle-lombok'
+apply plugin: 'groovy'
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'jacoco'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'xnat-data-builder'
+apply plugin: 'com.palantir.git-version'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://nrgxnat.jfrog.io/nrgxnat/libs-release'
+        name 'XNAT Release Repository'
+    }
+    maven {
+        url 'https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot'
+        name 'XNAT Snapshot Repository'
+    }
+    maven {
+        url 'https://nrgxnat.jfrog.io/nrgxnat/ext-release'
+        name 'XNAT External Release Repository'
+    }
+}
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+dependencyManagement.imports {
+    mavenBom "org.nrg:parent:${vXnat}"
+}
+
+dependencies {
+    implementation("org.nrg.xnat:web") {
+        transitive = false
+    }
+    implementation("org.nrg.xnat:xnat-data-models") {
+        transitive = false
+    }
+    implementation("org.nrg.xdat:core") {
+        transitive = false
+    }
+    implementation("org.nrg:prefs") {
+        transitive = false
+    }
+    implementation("org.nrg:framework") {
+        transitive = false
+    }
+
+    implementation "org.springframework:spring-web"
+    implementation "org.springframework.security:spring-security-config"
+    implementation "org.springframework.security:spring-security-ldap"
+	
+	// START OPENID
+	compile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.2.1.RELEASE'
+	compile group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.0.8.RELEASE'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.3'
+	// END OPEND
+
+    implementation "org.apache.commons:commons-lang3"
+    implementation "org.hibernate.javax.persistence:hibernate-jpa-2.1-api"
+    implementation "com.google.guava:guava"
+    implementation "org.slf4j:slf4j-api"
+    implementation "log4j:log4j"
+
+    implementation "org.springframework.security:spring-security-web"
+    implementation "javax.servlet:javax.servlet-api"
+
+    implementation localGroovy()
+
+    compileOnly "org.apache.ivy:ivy:2.4.0"
+    compileOnly("stratum:stratum") {
+        transitive = false
+    }
+
+    testImplementation "junit:junit"
+    testImplementation "org.springframework:spring-test"
+}
+
+if (hasProperty("rt.17.jar")) {
+    // Solution for bootstrap classpath warning and possible issues with compatibility with 1.7 libraries
+    // was taken from this post on discuss.gradle.org: http://bit.ly/24xD9j0
+    def rt17jar = property "rt.17.jar"
+    logger.info "Using ${rt17jar} as the bootstrap class path jar."
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) { task ->
+            task.options.fork = true
+            task.options.compilerArgs << "-XDignore.symbol.file"
+            task.options.bootClasspath = rt17jar as String
+        }
+    }
+} else {
+    logger.warn "No value was set for the rt.17.jar build property, using the default bootstrap class path. You should consider setting rt.17.jar to indicate a jar file containing the Java 1.7 run-time library:\n"
+    logger.warn "  ./gradlew -Prt.17.jar=rt-1.7.0_45.jar war\n"
+}
+
+jar {
+    manifest {
+        attributes 'Application-Name': 'XNAT OpenID Authentication Provider',
+                'Build-Date': new Date(),
+                'Implementation-Sha': gitVersion(),
+                'Implementation-Version': version
+    }
+}
+
+compileJava {
+    options.fork = false
+}
+
+configurations {
+    compile.extendsFrom(compileAndInclude)
+}
+
+jacoco {
+    toolVersion = dependencyManagement.importedProperties["jacoco.version"]
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = false
+        csv.enabled = false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+
+task fatJar(type: Jar) {
+    zip64 true
+    baseName = project.name + '-all'
+    from {
+        configurations.compileAndInclude.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    with jar
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir 'build/xnat-generated/src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+            srcDir 'build/xnat-generated/src/main/resources'
+        }
+    }
+}
+
+def propertyWithDefault(String name, Object value) {
+    hasProperty(name) ? property(name) : value
+}
