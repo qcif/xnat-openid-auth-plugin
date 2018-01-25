@@ -41,37 +41,37 @@ The following properties control the plugin:
 ### enabled
 Comma delimited list of provide ids, currently tested with Google `google` and AAF `aaf`.
 
-###siteUrl
+### siteUrl
 The main domain, needed to build the full `preEstablishedRedirUri`
 
 ### preEstablishedRedirUri
 The return leg of OpenID request after the provider has authenticated, defaults to `<siteUrl>/openid-login`
 
-### openid.<providerId>.clientId
+### openid.`providerId`.clientId
 The ID obtained on app registration
 
-### openid.<providerId>.clientSecret
+### openid.`providerId`.clientSecret
 The Secret obtained on app registration
 
-### openid.<providerId>.scopes
+### openid.`providerId`.scopes
 Controls the scopes returned by the server: `openid,profile,email`
 
-### openid.<providerId>.link
+### openid.`providerId`.link
 Controls the link HTML snippet displayed on the Login page for this provider. Location of the link text can optionally be customised by modifying `Login.vm`.
 
-### openid.<providerId>.shouldFilterEmailDomains
+### openid.`providerId`.shouldFilterEmailDomains
 Controls whether domains of the email should be compared against the whitelist: `allowedEmailDomains`.
 
-### openid.<providerId>.allowedEmailDomains
+### openid.`providerId`.allowedEmailDomains
 Comma delimted whitelist of domains.
 
-### openid.<providerId>.forceUserCreate
+### openid.`providerId`.forceUserCreate
 Allows skipping of user creation, usually set to true.
 
-### openid.<providerId>.userAutoEnabled
+### openid.`providerId`.userAutoEnabled
 Flag to set the `enabled` property of new users, set to false to allow admins to manually enable users before allowing logins, set to true to allow immediate access.
 
-### openid.<providerId>.userAutoVerified
+### openid.`providerId`.userAutoVerified
 Flag to set the `verified` property of new users.
 
  
