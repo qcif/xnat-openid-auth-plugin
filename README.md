@@ -1,5 +1,6 @@
-# XNAT OpenID Authentication Provider Plugin #
+# XNAT OpenID Connect Authentication Provider Plugin #
 
+Tested with [Google's OpenID Connect](https://developers.google.com/identity/protocols/OpenIDConnect "Google OpenID Connect") and [AAF](https://aaf.edu.au/ "AAF")
 
 ## Building ##
 
@@ -35,16 +36,47 @@ It looks in the following locations:
 
 This plugin will use any entries located in any of those properties files where the property **type** is set to "openid". See the sample properties in the resources directory.
 
+The following properties control the plugin:
+
+### enabled
+Comma delimited list of provide ids, currently tested with Google `google` and AAF `aaf`.
+
+###siteUrl
+The main domain, needed to build the full `preEstablishedRedirUri`
+
+### preEstablishedRedirUri
+The return leg of OpenID request after the provider has authenticated, defaults to `<siteUrl>/openid-login`
+
+### openid.<providerId>.clientId
+The ID obtained on app registration
+
+### openid.<providerId>.clientSecret
+The Secret obtained on app registration
+
+### openid.<providerId>.scopes
+Controls the scopes returned by the server: `openid,profile,email`
+
+### openid.<providerId>.link
+Controls the link HTML snippet displayed on the Login page for this provider. Location of the link text can optionally be customised by modifying `Login.vm`.
+
+### openid.<providerId>.shouldFilterEmailDomains
+Controls whether domains of the email should be compared against the whitelist: `allowedEmailDomains`.
+
+### openid.<providerId>.allowedEmailDomains
+Comma delimted whitelist of domains.
+
+### openid.<providerId>.forceUserCreate
+Allows skipping of user creation, usually set to true.
+
+### openid.<providerId>.userAutoEnabled
+Flag to set the `enabled` property of new users, set to false to allow admins to manually enable users before allowing logins, set to true to allow immediate access.
+
+### openid.<providerId>.userAutoVerified
+Flag to set the `verified` property of new users.
+
+ 
 ## Deploying ##
 
-Deploying your XNAT plugin requires the following steps:
-
-1. Copy the plugin jar to the **plugins** folder for your XNAT installation. The location of the 
-**plugins** folder varies based on how and where you have installed your XNAT. If you are running 
-a virtual machine created through the [XNAT Vagrant project](https://bitbucket/xnatdev/xnat-vagrant.git),
-you can copy the plugin to the appropriate configuration folder and then copy it within the VM from 
-**/vagrant** to **/data/xnat/home/plugins**.
-
-1. Restart the Tomcat server. Your new plugin will be available as soon as the restart and initialization process is completed.
+Please [XNAT documentation on how to deploy plugins.](https://wiki.xnat.org/documentation/xnat-administration/deploying-plugins-in-xnat)
 
 

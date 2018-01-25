@@ -8,8 +8,10 @@
 #* @vtlvariable name="ui" type="org.apache.turbine.services.pull.util.UIManager" *#
 #* @vtlvariable name="data" type="org.apache.turbine.util.RunData" *#
 #* @vtlvariable name="link" type="org.apache.turbine.services.pull.tools.TemplateLink" *#
+<!-- OPENID BEGIN -->
 #set($pluginClassMethod = $siteConfig.getClass().forName("au.edu.qcif.xnat.auth.openid.OpenIdAuthPlugin").getMethod("getLoginStr"))
 #set($loginStr = $pluginClassMethod.invoke(null))
+<!-- OPENID END -->
 #set ($siteId = $siteConfig.siteId)
 $page.setTitle("$siteId - Please Login")
     $page.setBgColor($ui.bgcolor)
@@ -205,10 +207,10 @@ $page.setTitle("$siteId - Please Login")
             </p>
 
             <input type="hidden" name="XNAT_CSRF" value="">
-            <!-- OPENID HACK BEGIN -->
+            <!-- OPENID BEGIN -->
             <!-- DUMP the login String: -->
             $loginStr
-            <!-- OPENID HACK END -->
+            <!-- OPENID END -->
         </form>
     </div>
 

@@ -14,11 +14,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 
-public class OpenIdConnectUserDetails {
+public class OpenIdConnectUserDetails extends XDATUser {
 
 	private static final long serialVersionUID = 1L;
-
-	private String userId;
 	private OAuth2AccessToken token;
 	private String email;
 	private Map<String, String> openIdUserInfo;
@@ -28,11 +26,12 @@ public class OpenIdConnectUserDetails {
 	private String lastName;
 	private String pw;
 	private String username;
+	private String providerId;
 
-	public OpenIdConnectUserDetails(Map<String, String> userInfo, OAuth2AccessToken token) {
+	public OpenIdConnectUserDetails(String providerId, Map<String, String> userInfo, OAuth2AccessToken token) {
 		this.openIdUserInfo = userInfo;
-		this.userId = userInfo.get("sub");
-		this.setUsername(userInfo.get("email"));
+		this.providerId = providerId;
+		this.setUsername(providerId + "_" + userInfo.get("sub"));
 		// this.username = userInfo.get("email");
 		this.token = token;
 		this.email = userInfo.get("email");
@@ -40,14 +39,6 @@ public class OpenIdConnectUserDetails {
 		this.setLastname(userInfo.get("family_name"));
 		this.name = userInfo.get("name");
 		this.picture = userInfo.get("picture");
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
 	}
 
 	public OAuth2AccessToken getToken() {

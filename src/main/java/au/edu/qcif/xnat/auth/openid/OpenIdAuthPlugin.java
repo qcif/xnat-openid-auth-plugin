@@ -6,8 +6,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
-import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.nrg.framework.annotations.XnatPlugin;
 import org.nrg.framework.configuration.ConfigPaths;
 import org.nrg.xdat.preferences.SiteConfigPreferences;
@@ -19,21 +20,37 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import au.edu.qcif.xnat.auth.openid.OpenIdConnectFilter;
+import lombok.extern.slf4j.Slf4j;
+
 import org.nrg.xnat.security.provider.AuthenticationProviderConfigurationLocator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
+
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
 import org.nrg.xnat.security.XnatSecurityExtension;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 
 @XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin")
-@EnableOAuth2Client
 @EnableWebSecurity
+@EnableOAuth2Client
 @Component
+@Slf4j
 public class OpenIdAuthPlugin implements XnatSecurityExtension {
+
+	private final Log log = LogFactory.getLog(OpenIdAuthPlugin.class);
 
 	@Autowired
 	public void setSiteConfigPreferences(final SiteConfigPreferences preferences) {
@@ -43,43 +60,16 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	@Autowired
 	public void setConfigPaths(final ConfigPaths configPaths) {
 		_configPaths = configPaths;
+		loadProps();
 	}
 
 	@Autowired
 	public void setMessageSource(final MessageSource messageSource) {
 		_messageSource = messageSource;
+		loadProps();
 	}
 
-	@Bean
-	public OAuth2ProtectedResourceDetails googleOpenId() {
-		return getProtectedResourceDetails("google");
-	}
-
-	@Bean
-	public OAuth2ProtectedResourceDetails aafOpenId() {
-		return getProtectedResourceDetails("aaf");
-	}
-
-	private AuthorizationCodeResourceDetails getProtectedResourceDetails(String providerId) {
-		final String clientId = getProperty(providerId, "clientId");
-		final String clientSecret = getProperty(providerId, "clientSecret");
-		final String accessTokenUri = getProperty(providerId, "accessTokenUri");
-		final String userAuthUri = getProperty(providerId, "userAuthUri");
-		final String preEstablishedUri = _props.getProperty("siteUrl")
-				+ getProperty(providerId, "preEstablishedRedirUri");
-		final String[] scopes = getProperty(providerId, "scopes").split(",");
-		final AuthorizationCodeResourceDetails details = new AuthorizationCodeResourceDetails();
-		details.setClientId(clientId);
-		details.setClientSecret(clientSecret);
-		details.setAccessTokenUri(accessTokenUri);
-		details.setUserAuthorizationUri(userAuthUri);
-		details.setScope(Arrays.asList(scopes));
-		details.setPreEstablishedRedirectUri(preEstablishedUri);
-		details.setUseCurrentUri(false);
-		return details;
-	}
-
-	private boolean isEnabled(String providerId) {
+	public boolean isEnabled(String providerId) {
 		getEnabledProviders();
 		for (String provider : _enabledProviders) {
 			if (provider.equals(providerId)) {
@@ -95,7 +85,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	}
 
 	private void loadProps() {
-		if (_props == null) {
+		if (_props == null && _configPaths != null && _messageSource != null) {
 			AuthenticationProviderConfigurationLocator configLocator = openIdConfigLocator();
 			_props = configLocator.getProviderDefinitions().get("openid");
 			_inst = this;
@@ -113,40 +103,11 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		return _enabledProviders;
 	}
 
-	@Autowired
-	@Qualifier("googleOpenIdTemplate")
-	private OAuth2RestTemplate googleRestTemplate;
-
-	@Autowired
-	@Qualifier("aafOpenIdTemplate")
-	private OAuth2RestTemplate aafRestTemplate;
-
 	@Bean
-	public OpenIdConnectFilter googleOpenIdConnectFilter() {
-		OpenIdConnectFilter filter = new OpenIdConnectFilter("/google-login", "google", this);
-		filter.setRestTemplate(googleRestTemplate);
+	@Scope("prototype")
+	public OpenIdConnectFilter createFilter() {
+		OpenIdConnectFilter filter = new OpenIdConnectFilter(getProps().getProperty("preEstablishedRedirUri"), this);
 		return filter;
-	}
-
-	@Bean
-	public OpenIdConnectFilter aafOpenIdConnectFilter() {
-		OpenIdConnectFilter filter = new OpenIdConnectFilter("/openid-login", "aaf", this);
-		filter.setRestTemplate(aafRestTemplate);
-		return filter;
-	}
-
-	@Bean
-	@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-	public OAuth2RestTemplate googleOpenIdTemplate(final OAuth2ClientContext clientContext) {
-		final OAuth2RestTemplate template = new OAuth2RestTemplate(googleOpenId(), clientContext);
-		return template;
-	}
-
-	@Bean
-	@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-	public OAuth2RestTemplate aafOpenIdTemplate(final OAuth2ClientContext clientContext) {
-		final OAuth2RestTemplate template = new OAuth2RestTemplate(aafOpenId(), clientContext);
-		return template;
 	}
 
 	@Bean
@@ -155,18 +116,11 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	}
 
 	public void configure(final HttpSecurity http) throws Exception {
+		this.http = http;
 		http.addFilterAfter(new OAuth2ClientContextFilter(), AbstractPreAuthenticatedProcessingFilter.class)
-				.addFilterAfter(googleOpenIdConnectFilter, OAuth2ClientContextFilter.class)
-				.addFilterAfter(aafOpenIdConnectFilter, OAuth2ClientContextFilter.class);
+				.addFilterAfter(createFilter(), OAuth2ClientContextFilter.class);
+
 	}
-
-	@Autowired
-	@Qualifier("googleOpenIdConnectFilter")
-	private OpenIdConnectFilter googleOpenIdConnectFilter;
-
-	@Autowired
-	@Qualifier("aafOpenIdConnectFilter")
-	private OpenIdConnectFilter aafOpenIdConnectFilter;
 
 	private SiteConfigPreferences _preferences;
 	private ConfigPaths _configPaths;
@@ -175,6 +129,8 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	private Properties _props;
 	private String[] _enabledProviders;
 	private static OpenIdAuthPlugin _inst;
+	private boolean isFilterConfigured = false;
+	private HttpSecurity http;
 
 	public static Properties getConfig() {
 		return _inst.getProps();
@@ -196,5 +152,41 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 
 	public String getAuthMethod() {
 		return _id;
+	}
+
+	@Bean
+	@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+	public OAuth2RestTemplate createRestTemplate(final OAuth2ClientContext clientContext) {
+		log.debug("At create rest template...");
+		ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+		HttpServletRequest request = attr.getRequest();
+		// Interrogate request to get providerId (e.g. look at url if nothing
+		// else)
+		String providerId = request.getParameter("providerId");
+		log.debug("Provider id is: " + providerId);
+		request.getSession().setAttribute("providerId", providerId);
+		final OAuth2RestTemplate template = new OAuth2RestTemplate(getProtectedResourceDetails(providerId),
+				clientContext);
+		return template;
+	}
+
+	public AuthorizationCodeResourceDetails getProtectedResourceDetails(String providerId) {
+		log.debug("Creating protected resource details of provider:" + providerId);
+		final String clientId = getProperty(providerId, "clientId");
+		final String clientSecret = getProperty(providerId, "clientSecret");
+		final String accessTokenUri = getProperty(providerId, "accessTokenUri");
+		final String userAuthUri = getProperty(providerId, "userAuthUri");
+		final String preEstablishedUri = getProps().getProperty("siteUrl")
+				+ getProps().getProperty("preEstablishedRedirUri");
+		final String[] scopes = getProperty(providerId, "scopes").split(",");
+		final AuthorizationCodeResourceDetails details = new AuthorizationCodeResourceDetails();
+		details.setClientId(clientId);
+		details.setClientSecret(clientSecret);
+		details.setAccessTokenUri(accessTokenUri);
+		details.setUserAuthorizationUri(userAuthUri);
+		details.setScope(Arrays.asList(scopes));
+		details.setPreEstablishedRedirectUri(preEstablishedUri);
+		details.setUseCurrentUri(false);
+		return details;
 	}
 }
