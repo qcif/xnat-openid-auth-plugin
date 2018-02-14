@@ -79,4 +79,6 @@ Flag to set the `verified` property of new users.
 
 Please [XNAT documentation on how to deploy plugins.](https://wiki.xnat.org/documentation/xnat-administration/deploying-plugins-in-xnat)
 
+## Sample Configuration ##
 
+[Sample configuration files are found here.](src/main/resources/) Please note the need to rename these files before usage, see opening section of the file. 
