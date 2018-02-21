@@ -96,8 +96,8 @@ dependencies {
 	
 	// START OPENID
 	compile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.2.1.RELEASE'
-	compile group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.0.8.RELEASE'
-	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.3'
+	compileOnly group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.0.8.RELEASE'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.3'
 	// END OPEND
 
     implementation "org.apache.commons:commons-lang3"
@@ -144,6 +144,9 @@ jar {
                 'Implementation-Sha': gitVersion(),
                 'Implementation-Version': version
     }
+	from {
+		configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+	}
 }
 
 compileJava {
@@ -172,9 +175,7 @@ task fatJar(type: Jar) {
     from {
         configurations.compileAndInclude.collect { it.isDirectory() ? it : zipTree(it) }
     } {
-        exclude "META-INF/*.SF"
-        exclude "META-INF/*.DSA"
-        exclude "META-INF/*.RSA"
+        exclude "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA"
     }
     with jar
 }

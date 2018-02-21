@@ -2,6 +2,20 @@
 
 Tested with [Google's OpenID Connect](https://developers.google.com/identity/protocols/OpenIDConnect "Google OpenID Connect") and [AAF](https://aaf.edu.au/ "AAF")
 
+## Pre-requisities ##
+
+This plugin requires updates in the XDAT and Xnat-web code, using branch `auth-provider-refactor` tagged with the version `1.7.5-auth-B1`. 
+
+1. Clone the [XDAT project](https://bitbucket.org/xnatdev/xdat), then checkout the version specified above.
+
+1. Build the project using the instructions provided.
+
+1. Clone the [XNAT-web project](https://bitbucket.org/qcifltd/xnat-web), then checkout the version specified above.
+
+1. Build the project using the instructions provided or simply `./gradlew clean war`
+
+1. Deploy the resulting war file at `build/libs/` into your Tomcat application. 
+
 ## Building ##
 
 To build the XNAT OpenID authentication provider plugin:
@@ -10,18 +24,21 @@ To build the XNAT OpenID authentication provider plugin:
 
 1. Build the plugin:
 
-    `./gradlew clean jar distZip` 
+    `./gradlew clean fatJar distZip` 
     
     On Windows, you can use the batch file:
     
-    `gradlew.bat clean jar distZip`
+    `gradlew.bat clean fatJar distZip`
     
-    This should build the plugin in the file **build/libs/xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar** 
-    (the version may differ based on updates to the code).
+This should build the plugin in the file **build/libs/xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar** (the version may differ based on updates to the code).
     
 1. Copy the plugin jar to your plugins folder: 
 
-    `cp build/libs/xnat-xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
+    `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
+
+1. Copy [Spring JWT library](http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar) into the plugins directory:
+
+	`wget http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar`
 
 ## Configuring and Testing ##
 
