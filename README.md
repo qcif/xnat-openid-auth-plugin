@@ -31,7 +31,11 @@ To build the XNAT OpenID authentication provider plugin:
     `gradlew.bat clean fatJar distZip`
     
 This should build the plugin in the file **build/libs/xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar** (the version may differ based on updates to the code).
-    
+
+## Deploying ##
+
+For more information, please [XNAT documentation on how to deploy plugins.](https://wiki.xnat.org/documentation/xnat-administration/deploying-plugins-in-xnat)
+
 1. Copy the plugin jar to your plugins folder: 
 
     `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
@@ -91,10 +95,6 @@ Flag to set the `enabled` property of new users, set to false to allow admins to
 ### openid.`providerId`.userAutoVerified
 Flag to set the `verified` property of new users.
 
- 
-## Deploying ##
-
-Please [XNAT documentation on how to deploy plugins.](https://wiki.xnat.org/documentation/xnat-administration/deploying-plugins-in-xnat)
 
 ## Sample Configuration ##
 
