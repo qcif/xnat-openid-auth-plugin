@@ -78,7 +78,6 @@ import org.springframework.security.oauth2.client.token.grant.code.Authorization
 @Slf4j
 public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter {
 
-	private final Log log = LogFactory.getLog(OpenIdConnectFilter.class);
 	private OpenIdAuthPlugin plugin;
 	private String[] allowedDomains;
 
@@ -108,19 +107,15 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 		try {
 			log.debug("Getting access token...");
 			accessToken = restTemplate.getAccessToken();
-			log.debug("Got access token!!!");
-			log.debug(accessToken);
+			log.debug("Got access token!!! {}", accessToken);
 		} catch (final OAuth2Exception e) {
-			log.debug("Could not obtain access token");
-			log.debug(e);
+			log.debug("Could not obtain access token", e);
 			log.debug("<<---------------------------->>");
 			e.printStackTrace();
 			throw new BadCredentialsException("Could not obtain access token", e);
 		} catch (final RuntimeException ex2) {
-			log.debug("Runtime exception");
-			log.debug(ex2);
+			log.debug("Runtime exception", ex2);
 			log.debug("----------------------------");
-			ex2.printStackTrace();
 			throw ex2;
 		}
 		String providerId = (String) request.getSession().getAttribute("providerId");

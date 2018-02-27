@@ -17,48 +17,34 @@
  */
 package au.edu.qcif.xnat.auth.openid;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.nrg.framework.annotations.XnatPlugin;
+import org.nrg.xnat.security.XnatSecurityExtension;
+import org.nrg.xnat.security.provider.AuthenticationProviderConfigurationLocator;
+import org.nrg.xnat.security.provider.ProviderAttributes;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.nrg.framework.annotations.XnatPlugin;
-import org.nrg.framework.configuration.ConfigPaths;
-import org.nrg.xdat.preferences.SiteConfigPreferences;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import au.edu.qcif.xnat.auth.openid.OpenIdConnectFilter;
-import lombok.extern.slf4j.Slf4j;
-
-import org.nrg.xnat.security.provider.AuthenticationProviderConfigurationLocator;
-
-import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
-
-import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
-import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
-import org.nrg.xnat.security.XnatSecurityExtension;
-import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 
 /**
  * XNAT Authentication plugin.
@@ -73,22 +59,9 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 @Slf4j
 public class OpenIdAuthPlugin implements XnatSecurityExtension {
 
-	private final Log log = LogFactory.getLog(OpenIdAuthPlugin.class);
-
 	@Autowired
-	public void setSiteConfigPreferences(final SiteConfigPreferences preferences) {
-		_preferences = preferences;
-	}
-
-	@Autowired
-	public void setConfigPaths(final ConfigPaths configPaths) {
-		_configPaths = configPaths;
-		loadProps();
-	}
-
-	@Autowired
-	public void setMessageSource(final MessageSource messageSource) {
-		_messageSource = messageSource;
+	public void setAuthenticationProviderConfigurationLocator(final AuthenticationProviderConfigurationLocator locator) {
+		_locator = locator;
 		loadProps();
 	}
 
@@ -108,9 +81,15 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	}
 
 	private void loadProps() {
-		if (_props == null && _configPaths != null && _messageSource != null) {
-			AuthenticationProviderConfigurationLocator configLocator = openIdConfigLocator();
-			_props = configLocator.getProviderDefinitions().get("openid");
+		if (_props == null && _locator != null) {
+			final Map<String, ProviderAttributes> openIdProviders = _locator.getProviderDefinitionsByType("openid");
+			if (openIdProviders.size() == 0) {
+				throw new RuntimeException("You must configure an OpenID provider");
+			}
+			if (openIdProviders.size() > 1) {
+				throw new RuntimeException("This plugin currently only supports one OpenID provider at a time, but I found " + openIdProviders.size() + " providers defined: " + StringUtils.join(openIdProviders.keySet(), ", "));
+			}
+			_props = _locator.getProviderDefinitionByType("openid", openIdProviders.keySet().iterator().next()).asProperties();
 			_inst = this;
 		}
 	}
@@ -133,11 +112,6 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		return filter;
 	}
 
-	@Bean
-	public AuthenticationProviderConfigurationLocator openIdConfigLocator() {
-		return new AuthenticationProviderConfigurationLocator(_id, _configPaths, _messageSource);
-	}
-
 	public void configure(final HttpSecurity http) throws Exception {
 		this.http = http;
 		http.addFilterAfter(new OAuth2ClientContextFilter(), AbstractPreAuthenticatedProcessingFilter.class)
@@ -145,9 +119,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 
 	}
 
-	private SiteConfigPreferences _preferences;
-	private ConfigPaths _configPaths;
-	private MessageSource _messageSource;
+	private AuthenticationProviderConfigurationLocator _locator;
 	private static String _id = "openid";
 	private Properties _props;
 	private String[] _enabledProviders;
@@ -212,4 +184,5 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		details.setUseCurrentUri(false);
 		return details;
 	}
+
 }
