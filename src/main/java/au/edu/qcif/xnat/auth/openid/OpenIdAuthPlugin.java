@@ -60,7 +60,8 @@ import java.util.Properties;
 public class OpenIdAuthPlugin implements XnatSecurityExtension {
 
 	@Autowired
-	public void setAuthenticationProviderConfigurationLocator(final AuthenticationProviderConfigurationLocator locator) {
+	public void setAuthenticationProviderConfigurationLocator(
+			final AuthenticationProviderConfigurationLocator locator) {
 		_locator = locator;
 		loadProps();
 	}
@@ -87,9 +88,13 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 				throw new RuntimeException("You must configure an OpenID provider");
 			}
 			if (openIdProviders.size() > 1) {
-				throw new RuntimeException("This plugin currently only supports one OpenID provider at a time, but I found " + openIdProviders.size() + " providers defined: " + StringUtils.join(openIdProviders.keySet(), ", "));
+				throw new RuntimeException(
+						"This plugin currently only supports one OpenID provider at a time, but I found "
+								+ openIdProviders.size() + " providers defined: "
+								+ StringUtils.join(openIdProviders.keySet(), ", "));
 			}
-			_props = _locator.getProviderDefinitionByType("openid", openIdProviders.keySet().iterator().next()).asProperties();
+			_props = _locator.getProviderDefinitionByType("openid", openIdProviders.keySet().iterator().next())
+					.getProperties();
 			_inst = this;
 		}
 	}

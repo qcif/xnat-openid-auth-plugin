@@ -4,7 +4,7 @@ Tested with [Google's OpenID Connect](https://developers.google.com/identity/pro
 
 ## Pre-requisities ##
 
-This plugin requires updates in the XDAT and Xnat-web code, using branch `auth-provider-refactor` tagged with the version `1.7.5-auth-B1`. 
+This plugin requires updates in the XDAT and Xnat-web code, using the tagged version `1.7.5-auth-B3-SNAPSHOT`. For convenience, you can [download the pre-built WAR file here](https://build.wurstworks.com/job/XNAT/job/XNAT%20Web%201.7%20Auth%20Perf/lastSuccessfulBuild/artifact/build/libs/xnat-web-1.7.5-auth-B3-SNAPSHOT.war).
 
 1. Clone the [XDAT project](https://bitbucket.org/xnatdev/xdat), then checkout the version specified above.
 
