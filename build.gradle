@@ -94,7 +94,7 @@ dependencies {
     implementation "org.springframework:spring-web"
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-ldap"
-	
+
 	// START OPENID
 	compile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.2.1.RELEASE'
 	compileOnly group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.0.8.RELEASE'
@@ -196,4 +196,23 @@ sourceSets {
 
 def propertyWithDefault(String name, Object value) {
     hasProperty(name) ? property(name) : value
+}
+
+def sonatypeUsername = hasProperty('SONATYPE_USERNAME') ? sonatypeUsername : System.getProperty('SONATYPE_USERNAME')
+def sonatypePassword = hasProperty('SONATYPE_USERNAME') ? sonatypePassword : System.getProperty('SONATYPE_PASSWORD')
+
+
+
+uploadArchives {
+    repositories {
+       mavenDeployer {
+
+             repository(url: "http://dev.redboxresearchdata.com.au/nexus/content/repositories/snapshots/") {
+             authentication(userName: sonatypeUsername, password: sonatypePassword)
+}
+             pom.version = "1.0.0-SNAPSHOT"
+             pom.artifactId = "openid-auth-plugin"
+             pom.groupId = "au.edu.qcif.xnat.openid"
+       }
+    }
 }

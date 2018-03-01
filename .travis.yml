@@ -1,18 +1,19 @@
 language: java
-
 jdk:
-  - oraclejdk8
-
+- oraclejdk8
 os:
-  - linux
-
+- linux
 branches:
   only:
-    - master
-
+  - master
 cache:
   directories:
-  - $HOME/.gradle
-
+  - "$HOME/.gradle"
 script:
-  - ./gradlew clean fatJar distZip
+- "./gradlew clean fatJar distZip"
+after_success:
+- "./gradlew -DSONATYPE_USERNAME=$SONATYPE_USERNAME -DSONATYPE_PASSWORD=$SONATYPE_PASSWORD upload"
+env:
+  global:
+  - secure: O/DpJs5ynoJgHO+jQQohyRNp8Syt5YAjiDk9T/zPFOol0d4VHhG3oscvzndU+bViUi1rVfM8KF16L8H+/i842oJs5qa9Da0PW7mtTYn96RO2HYfhg9kFj3NDYrwf5UjQR5sY92Zn/Pa3rVLcxlA8fwVbyhf+uOhZ9n3x3ZsV1SLqUeLJX3MQ3wVHiz0eO6qzn97fnI2YGqXLJ8CFGHR0P3x3Vjyr03g+aze22sstK8nWmhpVneMLYwmmz6KFcrvG52xGkxKqRSaYgm1TAtrKritFTZ37iXGm8+vVXLDeZi08YgkQ3mLtp7cMBlcN/ibWeV0eqH/kXmQIVJMsyzZiS+1wzFFI8Ni7/ak6jao6qhcRkOMCxD+gAchyGd1eKjDu+SGbNbRG3zdfOITbDQvo5K8g8r8r61QF1eiBKXQSTeJQNrfddSWLRknGbZG7ZLOZFPLaUh1PQvv9gKrbPv2+vJG5xWR7CwAKoVxDQoxyjsLPlePgxTr61hkUhR5jnceifzWN7YUTwhJydes3ty5DrvfcMQsNLyREXxNur+dV9MxNJDTw7gH88ojd4KEUkxSEVbyFkaYD23EfxDvmjWd1Aj42TxS9KbLQBkRv6COtC862IFTMFqMhqZVDOK4HuDQyd97+uYmCHWsuIKU9YgzsDli25HBYuO2NMokoEeL4ZyE=
+  - secure: BcgEfA3Qf1RjZvHZTd2b1iRUPOW0GTthiXmkn9ipB5LBytnQKF0WNBKlt+61KaPizBU+mMmtWz3a4Veg7zCckHcU8FIewL7+HQ37s+v4q7MIs5DmyOaLL+AEyAg6tcUuYx1JRbqZRcVQIELxHrWBsClTCiO+QH760FEhQ1PBvum8Dt1eucW2mXk6JfceAKHde+xxUGSH1cNB853xwje5LqMldeN3M9ArI7F21pzOuSTGTG5YrmHRoWXWEL7u1fSK0LgJa1lepzavzrvmmDHBd7uciZy2MjFaJy7a6MPZD+jPTWvMIGIzccUXSnOjE0JerS6h2HoffhtGoUoy6TDjzUUzI4KCd83SgY1gIvPgezx5KMua2KZkoH4HWqTOjdNxsjjG7M6nOusEdNGrNpeLlXyL1rMpVs6hfAe9QkbKB/C5Rtxk1Y0sExVjKpDlI1P32RQrf81k3eqliAmP0OsdQewJRevw8dC48wBd54XERo9t4H2gQNXp/B5iRlBkwtMc/pq1n5001WMMV1qNteLHj5TRdSvUVwpq3gM3Mqb4oDIxvuvIr3ThLzyOX8BY99DY0NsSQDvvL7rYmDmTydHybAb3O+utu0d86Ibl2hzv/xQ0f5JqY3f1h8O69f5VPTB1HKvSQB7GCiRxfobDRmBkMaF6lVuaTHxum4gzXzYQMoY=
