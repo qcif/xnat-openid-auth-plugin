@@ -14,7 +14,7 @@ This plugin requires updates in the XDAT and Xnat-web code, using the tagged ver
 
 1. Build the project using the instructions provided or simply `./gradlew clean war`
 
-1. Deploy the resulting war file at `build/libs/` into your Tomcat application. 
+1. Deploy the resulting war file at `build/libs/` into your Tomcat application.
 
 ## Building ##
 
@@ -24,21 +24,23 @@ To build the XNAT OpenID authentication provider plugin:
 
 1. Build the plugin:
 
-    `./gradlew clean fatJar distZip` 
-    
+    `./gradlew clean fatJar distZip`
+
     On Windows, you can use the batch file:
-    
+
     `gradlew.bat clean fatJar distZip`
-    
+
 This should build the plugin in the file **build/libs/xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar** (the version may differ based on updates to the code).
 
 ## Deploying ##
 
 For more information, please [XNAT documentation on how to deploy plugins.](https://wiki.xnat.org/documentation/xnat-administration/deploying-plugins-in-xnat)
 
-1. Copy the plugin jar to your plugins folder: 
+1. Build the plugin jar or download the latest development version [here](http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.edu.qcif.xnat.openid&a=openid-auth-plugin&v=LATEST&e=jar)
 
-    `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
+1. Copy the plugin jar to your plugins folder:
+
+    `cp build/libs/xnat-openid-auth-plugin-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
 
 1. Copy [Spring JWT library](http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar) into the plugins directory:
 
@@ -49,7 +51,7 @@ For more information, please [XNAT documentation on how to deploy plugins.](http
 XNAT searches for authenticatin server configurations by looking for files whose names match the pattern:
 
     *-provider.properties
-    
+
 It looks in the following locations:
 
 * On the classpath in the folder **META-INF/xnat/auth**
@@ -98,4 +100,4 @@ Flag to set the `verified` property of new users.
 
 ## Sample Configuration ##
 
-[Sample configuration files are found here.](src/main/resources/) Please note the need to rename these files before usage, see opening section of the file. 
+[Sample configuration files are found here.](src/main/resources/) Please note the need to rename these files before usage, see opening section of the file.
