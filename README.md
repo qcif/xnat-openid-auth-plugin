@@ -10,7 +10,7 @@ There are 2 ways to deploy XNAT-Web:
 
 ### - Download the pre-built WAR file from the XNAT Team ###
 
-For convenience, you can [download the pre-built WAR file here](https://build.wurstworks.com/job/XNAT/job/XNAT%20Web%201.7%20Auth%20Perf/lastSuccessfulBuild/artifact/build/libs/xnat-web-1.7.5-auth-B3-SNAPSHOT.war).
+For convenience, you can [download the pre-built WAR file here](https://build.wurstworks.com/job/XNAT/job/XNAT%20Web%201.7%20Auth%20Perf/30/artifact/build/libs/xnat-web-1.7.5-auth-B3-SNAPSHOT.war).
 
 ### - Build the code and generate a WAR file ###
 
