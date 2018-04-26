@@ -27,7 +27,6 @@ buildscript {
         classpath "org.nrg.xnat.build:xnat-data-builder:${vXnat}"
         classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
         classpath "gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.8.0"
-        classpath "io.franzbecker:gradle-lombok:1.10"
     }
 }
 
@@ -35,7 +34,6 @@ group 'au.edu.qcif.xnat.openid'
 version '1.0.0-SNAPSHOT'
 
 apply plugin: 'io.spring.dependency-management'
-apply plugin: 'io.franzbecker.gradle-lombok'
 apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'application'
@@ -70,52 +68,39 @@ targetCompatibility = 1.7
 
 mainClassName = "ValidateLdap"
 
+configurations {
+    compile.extendsFrom(compileAndInclude)
+
+    all {
+        exclude group: "javax.sql", module: "jdbc-stdext"
+        exclude group: "javax.transaction", module: "jta"
+    }
+}
+
 dependencyManagement.imports {
     mavenBom "org.nrg:parent:${vXnat}"
 }
 
 dependencies {
-    implementation("org.nrg.xnat:web:${vXnatDev}") {
-        transitive = false
-    }
-    implementation("org.nrg.xnat:xnat-data-models") {
-        transitive = false
-    }
-    implementation("org.nrg.xdat:core:${vXnatDev}") {
-        transitive = false
-    }
-    implementation("org.nrg:prefs") {
-        transitive = false
-    }
-    implementation("org.nrg:framework") {
-        transitive = false
-    }
-
-    implementation "org.springframework:spring-web"
-    implementation "org.springframework.security:spring-security-config"
-    implementation "org.springframework.security:spring-security-ldap"
-
-	// START OPENID
-	compile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.2.1.RELEASE'
-	compileOnly group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.0.8.RELEASE'
-	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.3'
-	// END OPEND
-
-    implementation "org.apache.commons:commons-lang3"
-    implementation "org.hibernate.javax.persistence:hibernate-jpa-2.1-api"
-    implementation "com.google.guava:guava"
-    implementation "org.slf4j:slf4j-api"
-    implementation "log4j:log4j"
-
-    implementation "org.springframework.security:spring-security-web"
-    implementation "javax.servlet:javax.servlet-api"
-
-    implementation localGroovy()
-
+    compileOnly "org.nrg.xnat:web:${vXnatDev}"
+    compileOnly "org.nrg.xnat:xnat-data-models"
+    compileOnly "org.nrg.xdat:core:${vXnatDev}"
+    compileOnly "org.nrg:prefs"
+    compileOnly "org.nrg:framework"
+    compileOnly "org.springframework:spring-web"
+    compileOnly "org.springframework.security:spring-security-config"
+    compileOnly "org.springframework.security:spring-security-ldap"
+    compileOnly "org.springframework.security:spring-security-web"
+	compileOnly "org.springframework.security.oauth:spring-security-oauth2:2.2.1.RELEASE"
+    compileOnly "org.springframework.security:spring-security-jwt:1.0.8.RELEASE"
+    compileOnly "org.apache.commons:commons-lang3"
+    compileOnly "org.hibernate.javax.persistence:hibernate-jpa-2.1-api"
+    compileOnly "com.google.guava:guava"
+    compileOnly "org.projectlombok:lombok"
+    compileOnly "org.slf4j:slf4j-api"
+    compileOnly "log4j:log4j"
+    compileOnly "javax.servlet:javax.servlet-api"
     compileOnly "org.apache.ivy:ivy:2.4.0"
-    compileOnly("stratum:stratum") {
-        transitive = false
-    }
 
     testImplementation "junit:junit"
     testImplementation "org.springframework:spring-test"
@@ -152,10 +137,6 @@ jar {
 
 compileJava {
     options.fork = false
-}
-
-configurations {
-    compile.extendsFrom(compileAndInclude)
 }
 
 jacoco {
@@ -200,8 +181,6 @@ def propertyWithDefault(String name, Object value) {
 
 def sonatypeUsername = hasProperty('SONATYPE_USERNAME') ? sonatypeUsername : System.getProperty('SONATYPE_USERNAME')
 def sonatypePassword = hasProperty('SONATYPE_USERNAME') ? sonatypePassword : System.getProperty('SONATYPE_PASSWORD')
-
-
 
 uploadArchives {
     repositories {
