@@ -1,0 +1,396 @@
+#* @vtlvariable name="siteConfig" type="org.nrg.xdat.preferences.SiteConfigPreferences" *#
+#* @vtlvariable name="user" type="org.nrg.xft.security.UserI" *#
+#* @vtlvariable name="timeLeft" type="java.lang.String" *#
+<!-- START: xnat-templates/navigations/DefaultTop.vm -->
+#if($popup)
+
+#else
+#if ($turbineUtils.GetPassedParameter("popup",$data))
+	#set ($popup = $turbineUtils.GetPassedParameter("popup",$data) )
+#else
+	#set ($popup = "")
+#end
+#end
+
+#if($project)
+  #set($projectString="/project/$project")
+#end
+
+#set ($SITE_ROOT = $content.getURI(""))
+
+<style type="text/css">
+
+    #attention_icon { float: left ; padding-top: 7px ; padding-left: 11px ; }
+    #attention_icon:hover { cursor: pointer ; }
+
+    #main_nav ul.nav .dark-shadow {
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+
+    #main_nav ul.nav div.data-table-wrapper {
+        width: auto;
+        min-width: 200px;
+        max-width: 880px;
+        max-height: 525px;
+        /*box-sizing: border-box;*/
+        overflow-y: auto;
+        overflow-x: hidden;
+        border: none;
+    }
+
+    #main_nav ul.nav div.data-table-wrapper * {
+        /*box-sizing: border-box;*/
+    }
+
+    #main_nav ul.nav #browse-projects div.data-table-wrapper {
+        /*width: 880px;*/
+        overflow-y: scroll;
+    }
+
+    #main_nav ul.nav table.data-table {
+        padding: 0;
+        border: none;
+    }
+
+    #main_nav ul.nav table.data-table th,
+    #main_nav ul.nav table.data-table td {
+        padding: 2px 12px;
+        border: none;
+    }
+
+    #main_nav ul.nav table.data-table th {
+        text-align: left;
+        padding: 4px 12px;
+        /*font-weight: bold;*/
+        /*border-right: 1px solid #ccc;*/
+    }
+    #main_nav ul.nav table.data-table th:last-of-type {
+        /*border-right: none;*/
+    }
+    #main_nav ul.nav table.data-table tr:hover,
+    #main_nav ul.nav table.data-table .item:hover {
+        background: #e5f2ff;
+    }
+    #main_nav ul.nav table.data-table th.sort {
+        background: none;
+        border-bottom: 1px solid #d0d0d0;
+        text-align: left;
+    }
+    #main_nav ul.nav table.data-table td.filter {
+        background: #f0f0f0;
+        padding: 6px;
+        border-bottom: 1px solid #d0d0d0;
+    }
+    #main_nav ul.nav table.data-table td.filter > input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #main_nav ul.nav table.data-table td a {
+        padding: 0;
+        font-size: 12px;
+    }
+    #main_nav ul.nav table.data-table td a.truncate {
+        width: 100%;
+        max-width: 600px;
+    }
+
+
+</style>
+
+<div id="user_bar">
+    <div class="inner">
+        <img id="attention_icon" src="$content.getURI('images/attention.png')" style="display:none;" alt="attention needed - click for more info" title="attention needed - click for more info">
+        #if($last_login)
+            <span id="last_login">Last login: $turbineUtils.formatDateTime($last_login)</span>
+        #end
+        #if($!user != "" && $user.isGuest())
+            <span id="user_info">Logged in as: <span style="color:red;">Guest</span> <b>|</b> <a href="$link.setPage("Login.vm")">Login</a> <b>|</b> <a href="$link.setPage("Register.vm")">Register</a></span>
+            <script type="text/javascript">
+                window.username = '';
+                XNAT.cookie.set('guest', 'true');
+            </script>
+        #else
+            #set($username = $!user.getUsername())
+            #set($name = $!user.getFirstname() + " " + $!user.getLastname())
+            #if($name!= " " && $username != "" && $username != "guest")
+              ## use default timeout value from web.xml as the starting text in the "#timeLeft" element
+              <span id="user_info">Logged in as: &nbsp;<a id="username-link" href="$link.setPage("XDATScreen_UpdateUser.vm")">$name</a> <b>|</b><span class="tip_icon" style="margin-right:3px;">
+                <span class="tip shadowed" style="top:20px;z-index:10000;white-space:normal;left:-150px;width:300px;background-color:#ffc;">Your XNAT session will auto-logout after a certain period of inactivity. You can reset that timer without reloading the page by clicking "renew."</span>
+                </span>
+                ## some kind of default text needs to be there so stuff doesn't shift around before the timer functions kick in
+                Auto-logout in: <b id="timeLeft">-:--:--</b> - <a id="timeLeftRenew" href="javascript:" onClick="XNAT.app.timeout.handleOk()">renew</a> <b>|</b> <a id="logout_user" href="$link.setAction("LogoutUser")">Logout</a></span>
+                <script type="text/javascript">
+                  window.username = '$!username';
+                  XNAT.cookie.set('guest', 'false');
+                </script>
+            #else
+                ## use default timeout value from web.xml as the starting text in the "#timeLeft" element
+                <span id="user_info">Logged in as: &nbsp;<a id="username-link" href="$link.setPage("XDATScreen_UpdateUser.vm")">$username</a> <b>|</b><span class="tip_icon" style="margin-right:3px;">
+                    <span class="tip shadowed" style="top:20px;z-index:10000;white-space:normal;left:-150px;width:300px;background-color:#ffc;">Your XNAT session will auto-logout after a certain period of inactivity. You can reset that timer without reloading the page by clicking "renew."</span>
+                </span>
+                ## some kind of default text needs to be there so stuff doesn't shift around before the timer functions kick in
+                Auto-logout in: <b id="timeLeft">-:--:--</b> - <a id="timeLeftRenew" href="javascript:" onClick="XNAT.app.timeout.handleOk()">renew</a> <b>|</b> <a id="logout_user" href="$link.setAction("LogoutUser")">Logout</a></span>
+                <script type="text/javascript">
+                    window.username = '$!username';
+                    XNAT.cookie.set('guest', 'false');
+                </script>
+            #end
+        #end
+        <div class="clear"></div>
+
+        #if ($siteConfig.pathErrorWarning != "")
+            <div id="warning_bar" style="display:none;">
+                <span class="close"><i class="fa fa-close"></i></span>
+                <span>
+                    XNAT System Path Verification Failure: Contact your system administrator
+                    <span class="tip_text">(<i>what does this mean?</i>)
+                        <span class="tip shadowed">
+                            $siteConfig.pathErrorWarning
+                        </span>
+                    </span>
+                </span>
+                        </div>
+                    #end
+
+                    #if ($sessionCount > 1 || $sessionIpCount > 1 )
+                    ##If you want fewer warnings, you can eliminate $sessionCount > 1 so it will not display a warning for multiple sessions on the same IP, or increase it to $sessionCount > X where X is the maximum number of sessions you can have on the same IP before you get a warning.
+                        <div id="warning_bar" style="display:none;">
+                            <span class="close"><i class="fa fa-close"></i></span>
+                <span>
+                    #if ( $sessionIpCount > 1 )
+                        ATTENTION: You have $sessionCount sessions open from $sessionIpCount distinct IP addresses.
+                    <span class="tip_text">(<i>what does this mean?</i>)
+                        <span class="tip shadowed">
+                            You may have multiple browsers open or may be logged in from more than one computer. If you believe that someone other than you has logged in to your account, please contact your site administrator immediately.
+                            The IP addresses are: $sessionIpCsv.
+                        </span>
+                    </span>
+                    #else
+                        ATTENTION: You have $sessionCount sessions open from one IP address.
+                    <span class="tip_text">(<i>what does this mean?</i>)
+                        <span class="tip shadowed">
+                            There is more than one session open from this computer (at IP address $sessionIpCsv). You could be logged in to XNAT using the same credentials using multiple browsers or from separate user accounts on your computer. If you believe that someone other than you has logged in to your account, please contact your site administrator immediately.
+                        </span>
+                    </span>
+
+                    #end
+                </span>
+            </div>
+        #end
+    </div>
+</div><!-- /user_bar -->
+
+<script type="text/javascript">
+    jq(function(){
+        if (XNAT.cookie.get('WARNING_BAR') == 'CLOSED'){
+            jq('#attention_icon').show();
+        }
+        else {
+            jq('#warning_bar').show();
+        }
+        jq('#attention_icon').click(function(){
+            jq('#warning_bar').slideToggle(200);
+        });
+        jq('#warning_bar .close').click(function(){
+            XNAT.cookie.set('WARNING_BAR', 'CLOSED');
+            jq('#warning_bar').slideUp(200);
+        });
+    })
+</script>
+
+<div id="main-nav-backdrop"></div>
+
+<div id="main_nav">
+    <div class="inner">
+
+    <ul class="nav">
+        #addGlobalCustomScreens("topBar")
+    </ul>
+
+    $navigation.setTemplate("XNATQuickSearch.vm")
+
+    </div>
+</div>
+<!-- /main_nav -->
+
+<!-- main_nav interactions -->
+<script type="text/javascript">
+
+    jq(function(){
+
+        var docBody         = jq(document.body);
+        var mainNav         = jq('#main_nav').find('ul.nav');
+        var mainNavBackdrop = jq('#main-nav-backdrop');
+
+        function mainNavClose(e){
+            mainNavBackdrop.hide();
+            mainNav.find('.active').removeClass('active');
+            mainNav.find('.open').hide().removeClass('open');
+        }
+
+        // give menus with submenus a class of 'more'
+        mainNav.find('li ul, li li ul').closest('li').addClass('more');
+        mainNav.find('li li ul').addClass('subnav');
+
+        mainNav.on('click.nolink', 'a[href^="#"]', function(e){
+            e.preventDefault();
+        });
+
+        mainNav.on('click.topnav', '> li', function(e){
+            e.stopPropagation();
+
+            var topMenuItem  = jq(this);
+            var subMenu      = topMenuItem.find('> ul');
+            var subMenuItems = null;
+
+            mainNavBackdrop.show();
+
+            // deactive all top-level items
+            mainNav.find('> li').removeClass('active');
+            // activate only this one
+            topMenuItem.addClass('active');
+
+            subMenuItems = subMenu.find('> li.more').removeClass('active');
+            subMenuItems.off('click.subnav').on('click.subnav', function(e){
+                e.stopPropagation();
+                subMenuItems.removeClass('active');
+                var thisMenuItem = jq(this);
+                thisMenuItem.addClass('active')
+                            .find('> ul')
+                            .each(function(){
+                                var sub     = jq(this);
+                                var offsetL = sub.closest('li').width();
+                                sub.css({ 'left': offsetL });
+                            });
+            });
+
+        });
+
+        mainNav.on('click', 'a', function(e){
+            var href = $(this).attr('href');
+            if (href.indexOf('#') !== 0) {
+                mainNavClose.call(this, e)
+            }
+        });
+        mainNavBackdrop.on('click', mainNavClose);
+
+        // clicking the "Logout" link sets the warning bar cookie to 'OPEN' so it's available if needed on next login
+        jq('#logout_user').click(function(){
+            XNAT.cookie.set('WARNING_BAR', 'OPEN');
+            XNAT.cookie.set('NOTIFICATION_MESSAGE', 'OPEN');
+        });
+
+    });
+
+</script>
+<!-- end main_nav interactions -->
+
+<div id="page_wrapper">
+
+<div id="header" class="main_header"><div class="pad">
+
+    #if($siteConfig.siteWideAlertStatus == "2")
+        <div class="$siteConfig.siteWideAlertType headNotification hidden">
+            <span class="close closeNotification"><i class="fa fa-close"></i></span>
+            <span>$siteConfig.siteWideAlertMessage</span>
+        </div>
+
+        <script>
+            if (XNAT.cookie.get('NOTIFICATION_MESSAGE') !== 'CLOSED') {
+                jq('.headNotification').removeClass('hidden');
+            }
+
+            jq('.closeNotification').on('click',function(){
+                jq(this).parent('.headNotification').slideUp().addClass('hidden');
+                XNAT.cookie.set('NOTIFICATION_MESSAGE', 'CLOSED');
+            })
+        </script>
+    #end
+
+    <a id="header_logo" href="$link.setPage("Index.vm")" style="display:none;">
+        #parse("/screens/Logo.vm")
+    </a>
+
+</div></div>  <!-- /header -->
+
+
+<script type="text/javascript">
+
+    XNAT.app.adjustHeaderAndNavForLogoSize = function(){
+
+        var header_logo$ = jq('#header_logo');
+
+        // adjust height of header if logo is taller than 65px
+        var hdr_logo_height = header_logo$.height();
+        if (hdr_logo_height > 65) {
+            jq('.main_header').height(hdr_logo_height + 10);
+        }
+
+        ## Commented out 2016/09/02 (XNAT-4501).  I don't think we want to do this (See home page when this takes effect)
+        ##// adjust width of main nav if logo is wider than 175px
+        ##var hdr_logo_width = header_logo$.width();
+        ##if (hdr_logo_width > 175) {
+        ##    jq('#main_nav').width(932 - hdr_logo_width - 20);
+        ##}
+
+        //
+        //var recent_proj_height = jq('#min_projects_list > div').height();
+        var recent_proj_height = 67;
+        //jq('#min_projects_list, #min_expt_list').height(recent_proj_height * 5).css({'min-width':349,'overflow-y':'scroll'});
+
+    }
+
+    // initialize the advanced search method toggler
+    XNAT.app.searchMethodToggler = function(_parent){
+
+        _parent = $$(_parent||'body');
+
+        var INPUTS = 'input, select, textarea, :input',
+            SEARCH_METHOD_CKBOXES = 'input.search-method',
+            __searchGroups = _parent.find('div.search-group'),
+            __searchMethodInputs = _parent.find(SEARCH_METHOD_CKBOXES);
+
+        // disable 'by-id' search groups by default
+        __searchGroups.filter('.by-id').addClass('disabled').
+            find(INPUTS).not(SEARCH_METHOD_CKBOXES).changeVal('').prop('disabled', true).addClass('disabled');
+
+        // enable 'by-criteria' search groups by default
+        __searchGroups.filter('.by-criteria').removeClass('disabled').
+            find(INPUTS).prop('disabled',false).removeClass('disabled');
+
+        // check 'by-criteria' checkboxes
+        __searchMethodInputs.filter('.by-criteria').prop('checked', true);
+
+        // don't add multiple click handlers
+        __searchMethodInputs.off('click');
+
+        // toggle the search groups
+        __searchMethodInputs.on('click', function(){
+
+            var method = this.value,
+                isChecked = this.checked;
+
+            __searchGroups.addClass('disabled').
+                find(INPUTS).not(SEARCH_METHOD_CKBOXES).changeVal('').prop('disabled', true).addClass('disabled');
+
+            __searchGroups.filter('.' + method).removeClass('disabled').
+                find(INPUTS).prop('disabled', false).removeClass('disabled');
+
+            // update the radio buttons/checkboxes
+            __searchMethodInputs.prop('checked',false);
+            __searchMethodInputs.filter('.' + method).prop('checked', true);
+            menuUpdate();
+        });
+    };
+
+</script>
+<script>
+    window.loggedIn = true;
+</script>
+##<script src="$content.getURI("scripts/xnat/app/timeout.js")"></script>
+<script src="${SITE_ROOT}/scripts/xnat/app/sessionTimer.js"></script>
+
+
+    <div id="tp_fm"></div>
+
+<!-- END: xnat-templates/navigations/DefaultTop.vm -->

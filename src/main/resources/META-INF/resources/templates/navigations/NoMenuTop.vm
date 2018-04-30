@@ -1,0 +1,52 @@
+#* @vtlvariable name="siteConfig" type="org.nrg.xdat.preferences.SiteConfigPreferences" *#
+#* @vtlvariable name="data" type="org.apache.turbine.util.RunData" *#
+#* @vtlvariable name="turbineUtils" type="org.nrg.xdat.turbine.utils.TurbineUtils" *#
+#* @vtlvariable name="page" type="org.apache.turbine.util.template.HtmlPageAttributes" *#
+#* @vtlvariable name="last_login" type="java.util.Date" *#
+#* @vtlvariable name="user" type="org.nrg.xft.security.UserI" *#
+#* @vtlvariable name="ui" type="org.apache.turbine.services.pull.util.UIManager" *#
+#* @vtlvariable name="link" type="org.apache.turbine.services.pull.tools.TemplateLink" *#
+<!-- BEGIN NoMenuTop.vm -->
+$page.setBgColor($ui.bgcolor)
+
+<div id="user_bar" class="no_menu">
+    #if($last_login)
+        <span id="last_login">Last login: $turbineUtils.formatDateTime($last_login)</span>
+	#end
+	#if($user)
+        #if(!$siteConfig.requireLogin && $user.isGuest())
+            <span id="user_info">Logged in as: <span style="color:red;">Guest</span> <b>|</b> <a href="$link.setPage("Login.vm")">Login</a> <b>|</b> <a href="$link.setPage("Register.vm")">Register</a></span>
+            <script>
+                if (window.isLoginPage) {
+                    $('#user_info').hide();
+                }
+            </script>
+        #else
+            #set($username = $user.getUsername())
+            #set($name = $!user.getFirstname() + " " + $!user.getLastname())
+            #if($username != "" && $username != "guest" && $name != " ")
+            ## use default timeout value from web.xml as the starting text in the "timeLeft" element
+            <span id="user_info">Logged in as: &nbsp;<a href="$link.setPage("XDATScreen_UpdateUser.vm")">$!name</a> <b>|</b> <a href="$link.setAction("LogoutUser")">Logout</a></span>
+            <script>
+                window.loggedIn = true;
+            </script>
+            #else
+                ## use default timout value from web.xml as the starting text in the "timeLeft" element
+                <span id="user_info">Logged in as: &nbsp;<a href="$link.setPage("XDATScreen_UpdateUser.vm")">$!username</a> <b>|</b> <a href="$link.setAction("LogoutUser")">Logout</a></span>
+                <script>
+                    window.loggedIn = true;
+                </script>
+            #end
+        #end
+	#end
+    <div class="clear"></div>
+</div><!-- /user_bar -->
+
+<div id="page_wrapper">
+
+<div id="header" class="main_header"><div class="pad">
+    <a id="header_logo" href="$link.setPage("Index.vm")#if($data.getParameters().getString('par'))/par/$data.getParameters().getString('par')#end">
+        #parse("/screens/Logo.vm")
+    </a>
+</div></div>
+<!-- END NoMenuTop.vm -->

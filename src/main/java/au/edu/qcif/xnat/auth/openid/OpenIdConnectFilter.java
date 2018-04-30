@@ -125,7 +125,8 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 			final Jwt tokenDecoded = JwtHelper.decode(idToken);
 			log.debug("===== : " + tokenDecoded.getClaims());
 			final Map<String, String> authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
-			final OpenIdConnectUserDetails user = new OpenIdConnectUserDetails(providerId, authInfo, accessToken);
+			final OpenIdConnectUserDetails user = new OpenIdConnectUserDetails(providerId, authInfo, accessToken,
+					plugin);
 
 			if (shouldFilterEmailDomains(providerId) && !isAllowedEmailDomain(user.getEmail(), providerId)) {
 				log.error("Domain not allowed: " + user.getEmail());

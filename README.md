@@ -121,6 +121,8 @@ Flag to set the `enabled` property of new users, set to false to allow admins to
 ### openid.`providerId`.userAutoVerified
 Flag to set the `verified` property of new users.
 
+### openid.`providerId`.*Property
+The property names used to populate user information during user creation. These are the property names from the information returned from the authentication provider.
 
 ## Sample Configuration ##
 
