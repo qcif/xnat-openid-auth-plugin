@@ -146,6 +146,17 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		return loginStr;
 	}
 
+	public static String getUsernamePasswordStyle() {
+		_inst.loadProps();
+		boolean disableUsernamePassword = Boolean
+				.parseBoolean(_inst.getProps().getProperty("disableUsernamePasswordLogin"));
+		if (disableUsernamePassword) {
+			return "display:none";
+		} else {
+			return "";
+		}
+	}
+
 	public void configure(final AuthenticationManagerBuilder builder) throws Exception {
 
 	}

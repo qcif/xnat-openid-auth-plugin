@@ -124,6 +124,9 @@ Flag to set the `verified` property of new users.
 ### openid.`providerId`.*Property
 The property names used to populate user information during user creation. These are the property names from the information returned from the authentication provider.
 
+### disableUsernamePasswordLogin
+Toggle username & password login visibility on the login form
+
 ## Sample Configuration ##
 
 [Sample configuration files are found here.](src/main/resources/) Please note the need to rename these files before usage, see opening section of the file.

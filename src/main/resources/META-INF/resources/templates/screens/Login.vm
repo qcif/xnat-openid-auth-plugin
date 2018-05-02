@@ -10,7 +10,9 @@
 #* @vtlvariable name="link" type="org.apache.turbine.services.pull.tools.TemplateLink" *#
 <!-- OPENID BEGIN -->
 #set($pluginClassMethod = $siteConfig.getClass().forName("au.edu.qcif.xnat.auth.openid.OpenIdAuthPlugin").getMethod("getLoginStr"))
+#set($pluginClassMethodDisableUsernamePassword = $siteConfig.getClass().forName("au.edu.qcif.xnat.auth.openid.OpenIdAuthPlugin").getMethod("getUsernamePasswordStyle"))
 #set($loginStr = $pluginClassMethod.invoke(null))
+#set($usernamePasswordStyleStr = $pluginClassMethodDisableUsernamePassword.invoke(null))
 <!-- OPENID END -->
 #set ($siteId = $siteConfig.siteId)
 $page.setTitle("$siteId - Please Login")
@@ -168,6 +170,7 @@ $page.setTitle("$siteId - Please Login")
         #end
 
         <form name="form1" method="post" action="$content.getURI("/login")" class="noHide friendlyForm validate" id="login_form">
+        	<div id="usernamepw_login" style="$usernamePasswordStyleStr">
             #if($login_methods && $login_methods.size() == 0)
                 <input type="hidden" id="login_method" name="login_method" value="Database">
             #elseif($login_methods && $login_methods.size() > 1)
@@ -207,6 +210,7 @@ $page.setTitle("$siteId - Please Login")
             </p>
 
             <input type="hidden" name="XNAT_CSRF" value="">
+            </div>
             <!-- OPENID BEGIN -->
             <!-- DUMP the login String: -->
             $loginStr
