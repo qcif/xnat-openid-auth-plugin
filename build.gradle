@@ -5,7 +5,7 @@
 
 buildscript {
     ext {
-        vXnatDev = '1.7.5-auth-B3-SNAPSHOT'
+        vXnatDev = '1.7.5-RC1-SNAPSHOT'
         vXnat = '1.7.5-SNAPSHOT'
     }
     repositories {
@@ -72,6 +72,7 @@ configurations {
     compile.extendsFrom(compileAndInclude)
 
     all {
+        exclude group: "com.sun.media", module: "jai_imageio"
         exclude group: "javax.sql", module: "jdbc-stdext"
         exclude group: "javax.transaction", module: "jta"
     }
