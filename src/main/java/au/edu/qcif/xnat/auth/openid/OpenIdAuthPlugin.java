@@ -83,7 +83,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 
 	private void loadProps() {
 		if (_props == null && _locator != null) {
-			final Map<String, ProviderAttributes> openIdProviders = _locator.getProviderDefinitionsByType("openid");
+			final Map<String, ProviderAttributes> openIdProviders = _locator.getProviderDefinitionsByAuthMethod("openid");
 			if (openIdProviders.size() == 0) {
 				throw new RuntimeException("You must configure an OpenID provider");
 			}
@@ -93,8 +93,8 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 								+ openIdProviders.size() + " providers defined: "
 								+ StringUtils.join(openIdProviders.keySet(), ", "));
 			}
-			_props = _locator.getProviderDefinitionByType("openid", openIdProviders.keySet().iterator().next())
-					.getProperties();
+            final ProviderAttributes providerDefinition = _locator.getProviderDefinition(openIdProviders.keySet().iterator().next());
+            _props = providerDefinition != null ? providerDefinition.getProperties() : new Properties();
 			_inst = this;
 		}
 	}
@@ -113,14 +113,13 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	@Bean
 	@Scope("prototype")
 	public OpenIdConnectFilter createFilter() {
-		OpenIdConnectFilter filter = new OpenIdConnectFilter(getProps().getProperty("preEstablishedRedirUri"), this);
-		return filter;
+        return new OpenIdConnectFilter(getProps().getProperty("preEstablishedRedirUri"), this);
 	}
 
 	public void configure(final HttpSecurity http) throws Exception {
 		this.http = http;
 		http.addFilterAfter(new OAuth2ClientContextFilter(), AbstractPreAuthenticatedProcessingFilter.class)
-				.addFilterAfter(createFilter(), OAuth2ClientContextFilter.class);
+            .addFilterAfter(createFilter(), OAuth2ClientContextFilter.class);
 
 	}
 
