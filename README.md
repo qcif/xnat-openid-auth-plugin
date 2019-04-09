@@ -4,25 +4,11 @@ Tested with [Google's OpenID Connect](https://developers.google.com/identity/pro
 
 ## Pre-requisities ##
 
-This plugin requires updates in the XDAT and Xnat-web code, using the tagged version `1.7.5-auth-B3-SNAPSHOT`.
+This plugin is for use with XNAT 1.7.5.x releases.
 
 There are 2 ways to deploy XNAT-Web:
 
-### - Download the pre-built WAR file from the XNAT Team ###
 
-For convenience, you can [download the pre-built WAR file here](https://ci.xnat.org/job/auth-provider-refactor/job/XNAT%20Web/lastSuccessfulBuild/artifact/build/libs/xnat-web-1.7.5-auth-B3-SNAPSHOT.war).
-
-### - Build the code and generate a WAR file ###
-
-1. Clone the [XDAT project](https://bitbucket.org/xnatdev/xdat), then checkout the **1.7-auth-perf** branch: `git checkout 1.7-auth-perf`
-
-1. Build the project using the instructions provided.
-
-1. Clone the [XNAT-web project](https://bitbucket.org/qcifltd/xnat-web), then checkout the **1.7-auth-perf** branch: `git checkout 1.7-auth-perf`.
-
-1. Build the project using the instructions provided or simply `./gradlew clean war`
-
-1. Deploy the resulting war file at `build/libs/` into your Tomcat application.
 
 ## Deploying this plugin ##
 
@@ -36,21 +22,6 @@ Again there are 2 ways to accomplish this:
 
 1. Copy the plugin jar to your plugins folder:
     `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
-
-1. Copy [Spring Security OAuth2](http://central.maven.org/maven2/org/springframework/security/oauth/spring-security-oauth2/2.2.1.RELEASE/spring-security-oauth2-2.2.1.RELEASE.jar) and [Spring JWT library](http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar) into the plugins directory:
-
-  ```
-  $ wget http://central.maven.org/maven2/org/springframework/security/oauth/spring-security-oauth2/2.2.1.RELEASE/spring-security-oauth2-2.2.1.RELEASE.jar
-  $ wget http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar
-  ```
-
-  **Note:** These dependencies will be included in later development versions of **xnat-web** as well as the 1.7.5 release. Check the war file you downloaded and, if these libraries are already in the war file, you don't need to download them separately. You can check for them with the following command:
-
-  ```
-  $ jar tf xnat-web-1.7-auth-B3-SNAPSHOT.war | grep -E '(spring-security-oauth2|spring-security-jwt)'
-  WEB-INF/lib/spring-security-oauth2-2.2.1.RELEASE.jar
-  WEB-INF/lib/spring-security-jwt-1.0.8.RELEASE.jar
-  ```
 
 ### 2. Build the code and generate the JAR ###
 
@@ -73,9 +44,6 @@ To build the XNAT OpenID authentication provider plugin:
 1. Copy the plugin jar to your plugins folder:
 
     `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
-
-1. Copy [Spring Security OAuth2](http://central.maven.org/maven2/org/springframework/security/oauth/spring-security-oauth2/2.2.1.RELEASE/spring-security-oauth2-2.2.1.RELEASE.jar) and [Spring JWT library](http://central.maven.org/maven2/org/springframework/security/spring-security-jwt/1.0.8.RELEASE/spring-security-jwt-1.0.8.RELEASE.jar) into the plugins directory. See the **Note** above
-about whether this step is necessary.
 
 
 ## Configuring and Testing ##
