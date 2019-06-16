@@ -52,7 +52,7 @@ import java.util.Properties;
  * @author <a href='https://github.com/shilob'>Shilo Banihit</a>
  * 
  */
-@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin")
+@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin", log4jPropertiesFile = "xnat-openid-auth-plugin-log4j.properties")
 @EnableWebSecurity
 @EnableOAuth2Client
 @Component

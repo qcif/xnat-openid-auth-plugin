@@ -75,6 +75,7 @@ configurations {
         exclude group: "com.sun.media", module: "jai_imageio"
         exclude group: "javax.sql", module: "jdbc-stdext"
         exclude group: "javax.transaction", module: "jta"
+        exclude group: "edu.ucar", module: "netcdf"
     }
 }
 
