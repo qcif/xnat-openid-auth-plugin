@@ -1,6 +1,18 @@
 /*
  * xnat-openid-plugin: settings.gradle
-
  */
 
-rootProject.name = 'xnat-openid-auth-plugin'
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/gradle-plugins-release" }
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/gradle-plugins-snapshot" }
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-release" }
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot" }
+    }
+}
+
+rootProject.name = "openid-auth-plugin"
+

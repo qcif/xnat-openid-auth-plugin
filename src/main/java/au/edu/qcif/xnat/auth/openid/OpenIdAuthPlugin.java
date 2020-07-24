@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author <a href='https://github.com/shilob'>Shilo Banihit</a>
  * 
  */
-@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin", log4jPropertiesFile = "au/edu/qcif/xnat/auth/openid/xnat-openid-auth-plugin-logback.xml")
+@XnatPlugin(value = "openIdAuthPlugin", name = "XNAT OpenID Authentication Provider Plugin", logConfigurationFile = "au/edu/qcif/xnat/auth/openid/openid-auth-plugin-logback.xml")
 @EnableWebSecurity
 @EnableOAuth2Client
 @Component

@@ -5,71 +5,40 @@
 
 buildscript {
     ext {
-        vXnatDev = '1.7.5'
-        vXnat = '1.7.5'
-    }
-    repositories {
-        mavenLocal()
-        jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-        maven {
-            url 'https://nrgxnat.jfrog.io/nrgxnat/libs-release'
-            name 'XNAT Release Repository'
-        }
-        maven {
-            url 'https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot'
-            name 'XNAT Snapshot Repository'
-        }
-    }
-    dependencies {
-        classpath "org.nrg.xnat.build:xnat-data-builder:${vXnat}"
-        classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
-        classpath "gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.8.0"
+        vXnat = "1.8.0"
     }
 }
 
-group 'au.edu.qcif.xnat.openid'
-version '1.1.1-SNAPSHOT'
+plugins {
+    id "application"
+    id "eclipse"
+    id "groovy"
+    id "idea"
+    id "jacoco"
+    id "java"
+    id "maven-publish"
+    id "com.dorongold.task-tree" version "1.5"
+    id "com.palantir.git-version" version "0.12.3"
+    id "io.franzbecker.gradle-lombok" version "4.0.0"
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+    id "org.nrg.xnat.build.xnat-data-builder" version "1.8.0"
+}
 
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'groovy'
-apply plugin: 'java'
-apply plugin: 'application'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'jacoco'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'xnat-data-builder'
-apply plugin: 'com.palantir.git-version'
+group "au.edu.qcif.xnat.openid"
+version "1.1.1-SNAPSHOT"
+description "XNAT OpenID Authentication Provider"
 
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
-    maven {
-        url 'https://nrgxnat.jfrog.io/nrgxnat/libs-release'
-        name 'XNAT Release Repository'
-    }
-    maven {
-        url 'https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot'
-        name 'XNAT Snapshot Repository'
-    }
-    maven {
-        url 'https://nrgxnat.jfrog.io/nrgxnat/ext-release'
-        name 'XNAT External Release Repository'
-    }
+    maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-release" }
+    maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot" }
 }
-
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
 
 mainClassName = "ValidateLdap"
 
 configurations {
-    compile.extendsFrom(compileAndInclude)
+    implementation.extendsFrom(implementAndInclude)
 
     all {
         exclude group: "com.sun.media", module: "jai_imageio"
@@ -84,57 +53,31 @@ dependencyManagement.imports {
 }
 
 dependencies {
-    compileOnly "org.nrg.xnat:web:${vXnatDev}"
-    compileOnly "org.nrg.xnat:xnat-data-models"
-    compileOnly "org.nrg.xdat:core:${vXnatDev}"
-    compileOnly "org.nrg:prefs"
-    compileOnly "org.nrg:framework"
+    compileOnly "org.nrg.xnat:web"
     compileOnly "org.springframework:spring-web"
     compileOnly "org.springframework.security:spring-security-config"
-    compileOnly "org.springframework.security:spring-security-ldap"
     compileOnly "org.springframework.security:spring-security-web"
-	compileOnly "org.springframework.security.oauth:spring-security-oauth2:2.2.1.RELEASE"
-    compileOnly "org.springframework.security:spring-security-jwt:1.0.8.RELEASE"
+	compileOnly "org.springframework.security.oauth:spring-security-oauth2"
+    compileOnly "org.springframework.security:spring-security-jwt"
     compileOnly "org.apache.commons:commons-lang3"
-    compileOnly "org.hibernate.javax.persistence:hibernate-jpa-2.1-api"
-    compileOnly "com.google.guava:guava"
-    compileOnly "org.projectlombok:lombok"
     compileOnly "org.slf4j:slf4j-api"
-    compileOnly "log4j:log4j"
-    compileOnly "javax.servlet:javax.servlet-api"
-    compileOnly "org.apache.ivy:ivy:2.4.0"
 
     testImplementation "junit:junit"
     testImplementation "org.springframework:spring-test"
 }
 
-if (hasProperty("rt.17.jar")) {
-    // Solution for bootstrap classpath warning and possible issues with compatibility with 1.7 libraries
-    // was taken from this post on discuss.gradle.org: http://bit.ly/24xD9j0
-    def rt17jar = property "rt.17.jar"
-    logger.info "Using ${rt17jar} as the bootstrap class path jar."
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) { task ->
-            task.options.fork = true
-            task.options.compilerArgs << "-XDignore.symbol.file"
-            task.options.bootClasspath = rt17jar as String
-        }
-    }
-} else {
-    logger.warn "No value was set for the rt.17.jar build property, using the default bootstrap class path. You should consider setting rt.17.jar to indicate a jar file containing the Java 1.7 run-time library:\n"
-    logger.warn "  ./gradlew -Prt.17.jar=rt-1.7.0_45.jar war\n"
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 jar {
     manifest {
-        attributes 'Application-Name': 'XNAT OpenID Authentication Provider',
-                'Build-Date': new Date(),
-                'Implementation-Sha': gitVersion(),
-                'Implementation-Version': version
+        attributes "Application-Name": project.description,
+                   "Build-Date": new Date(),
+                   "Implementation-Sha": gitVersion(),
+                   "Implementation-Version": project.version
     }
-	from {
-		configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-	}
 }
 
 compileJava {
@@ -149,15 +92,15 @@ jacocoTestReport {
     reports {
         xml.enabled = false
         csv.enabled = false
-        html.destination file("${buildDir}/jacocoHtml")
+        html.enabled = true
     }
 }
 
 task fatJar(type: Jar) {
     zip64 true
-    baseName = project.name + '-all'
+    archiveBaseName.set project.name + "-all"
     from {
-        configurations.compileAndInclude.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.implementAndInclude.collect { it.isDirectory() ? it : zipTree(it) }
     } {
         exclude "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA"
     }
@@ -167,12 +110,10 @@ task fatJar(type: Jar) {
 sourceSets {
     main {
         java {
-            srcDir 'src/main/java'
-            srcDir 'build/xnat-generated/src/main/java'
+            srcDir "build/xnat-generated/src/main/java"
         }
         resources {
-            srcDir 'src/main/resources'
-            srcDir 'build/xnat-generated/src/main/resources'
+            srcDir "build/xnat-generated/src/main/resources"
         }
     }
 }
@@ -181,19 +122,20 @@ def propertyWithDefault(String name, Object value) {
     hasProperty(name) ? property(name) : value
 }
 
-def sonatypeUsername = hasProperty('SONATYPE_USERNAME') ? sonatypeUsername : System.getProperty('SONATYPE_USERNAME')
-def sonatypePassword = hasProperty('SONATYPE_USERNAME') ? sonatypePassword : System.getProperty('SONATYPE_PASSWORD')
+/*
+def sonatypeUsername = hasProperty("SONATYPE_USERNAME") ? sonatypeUsername : System.getProperty("SONATYPE_USERNAME")
+def sonatypePassword = hasProperty("SONATYPE_USERNAME") ? sonatypePassword : System.getProperty("SONATYPE_PASSWORD")
 
 uploadArchives {
     repositories {
-       mavenDeployer {
-
-             repository(url: "http://dev.redboxresearchdata.com.au/nexus/content/repositories/snapshots/") {
-             authentication(userName: sonatypeUsername, password: sonatypePassword)
-}
-             pom.version = "1.1.0-SNAPSHOT"
-             pom.artifactId = "openid-auth-plugin"
-             pom.groupId = "au.edu.qcif.xnat.openid"
-       }
+        mavenDeployer {
+            repository(url: "http://dev.redboxresearchdata.com.au/nexus/content/repositories/snapshots/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+            pom.version = project.version
+            pom.artifactId = rootProject.name
+            pom.groupId = project.group
+        }
     }
 }
+*/
