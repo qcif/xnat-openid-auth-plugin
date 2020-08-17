@@ -64,7 +64,7 @@ This plugin will use any entries located in any of those properties files where 
 The following properties control the plugin:
 
 ### enabled
-Comma delimited list of provide ids, currently tested with Google `google` and AAF `aaf`.
+Comma delimited list of provide ids, currently tested with Google `google`, AAF `aaf`, and WUSTL `wustl`.
 
 ### siteUrl
 The main domain, needed to build the full `preEstablishedRedirUri`
@@ -104,6 +104,9 @@ The property names used to populate user information during user creation. These
 
 ### disableUsernamePasswordLogin
 Toggle username & password login visibility on the login form
+
+### openid.`providerId`.pkceEnabled
+Flag to enable the PKCE feature in the authrozation code grant flow.
 
 ## Sample Configuration ##
 
