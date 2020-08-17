@@ -18,56 +18,41 @@
 package au.edu.qcif.xnat.auth.openid;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.nrg.xdat.security.helpers.Roles;
 import org.nrg.xdat.security.helpers.Users;
-import org.nrg.xdat.security.user.exceptions.UserFieldMappingException;
 import org.nrg.xdat.security.user.exceptions.UserInitException;
 import org.nrg.xdat.security.user.exceptions.UserNotFoundException;
 import org.nrg.xft.event.EventDetails;
 import org.nrg.xft.event.EventUtils;
 import org.nrg.xft.security.UserI;
-import org.nrg.xft.utils.ValidationUtils.ValidationResultsI;
 import org.nrg.xnat.security.exceptions.NewAutoAccountNotAutoEnabledException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.jwt.Jwt;
 import org.springframework.security.jwt.JwtHelper;
-import org.springframework.security.oauth2.client.OAuth2ClientContext;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import au.edu.qcif.xnat.auth.openid.tokens.OpenIdAuthToken;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
-import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 
 /**
  * Main Spring Security authentication filter.
@@ -104,11 +89,22 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
 			throws AuthenticationException, IOException, ServletException {
 		log.debug("Executed attemptAuthentication...");
+		
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			String requestProviderId = request.getParameter("providerId");
+			String sessionProviderId = (String) request.getSession().getAttribute("providerId");
+			if (requestProviderId != null && requestProviderId != null && !requestProviderId.equals(sessionProviderId)) {
+				log.debug("Found a session that had previously stopped during the OAuth/OIDC authentication process. Deleting the session.");
+				request.getSession().invalidate();   
+			}	
+		}
+		
 		OAuth2AccessToken accessToken;
 		try {
 			log.debug("Getting access token...");
 			accessToken = restTemplate.getAccessToken();
-			log.debug("Got access token!!! {}", accessToken);
+			log.debug("Got access token!!! {}", accessToken);			
 		} catch (final OAuth2Exception e) {
 			log.debug("Could not obtain access token", e);
 			log.debug("<<---------------------------->>");

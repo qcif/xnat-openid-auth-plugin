@@ -17,18 +17,9 @@
  */
 package au.edu.qcif.xnat.auth.openid;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.nrg.xdat.entities.UserAuthI;
 import org.nrg.xdat.security.XDATUser;
-import org.nrg.xft.exception.MetaDataException;
-import org.nrg.xft.security.UserI;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 
 /**
