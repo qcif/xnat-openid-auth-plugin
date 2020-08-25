@@ -26,6 +26,10 @@ import org.springframework.security.oauth2.common.exceptions.InvalidRequestExcep
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import au.edu.qcif.xnat.auth.openid.OpenIdAuthPlugin;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class PkceAuthorizationCodeAccessTokenProvider extends AuthorizationCodeAccessTokenProvider {
 
 	private StateKeyGenerator stateKeyGenerator = new DefaultStateKeyGenerator();
@@ -75,6 +79,7 @@ public class PkceAuthorizationCodeAccessTokenProvider extends AuthorizationCodeA
 
 		if (resource.isPkceEnabled()) {
 			form.set("code_verifier", preservedState.getCodeVerifier());
+			log.debug("code_verifier parameter added");
 		}
 		
 		if (request.getStateKey() != null || stateMandatory) {
@@ -121,16 +126,20 @@ public class PkceAuthorizationCodeAccessTokenProvider extends AuthorizationCodeA
 
 		String codeVerifier = null;
 		if (resource.isPkceEnabled()) {
+			log.debug("Adding parameters related to PKCE");
 			codeVerifier = generateKey(96);
 			try {
 				String codeChallenge = createHash(codeVerifier);
-				Log.error(codeChallenge);
-				Log.error(codeChallenge.length());
 				requestParameters.put("code_challenge", codeChallenge);
+				log.debug("code_challenge parameter added");
 				requestParameters.put("code_challenge_method", "S256");
+				log.debug("code_challenge_method parameter added");
 			} catch (Exception e) {
 				requestParameters.put("code_challenge", codeVerifier);
+				log.debug("code_challenge parameter added");
 			}
+		} else {
+			log.debug("PKCE is disabled");
 		}
 
 		// Client secret is not required in the initial authorization request

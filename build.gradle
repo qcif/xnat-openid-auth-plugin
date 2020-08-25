@@ -31,7 +31,7 @@ buildscript {
 }
 
 group 'au.edu.qcif.xnat.openid'
-version '1.1.0-SNAPSHOT'
+version '1.1.1-SNAPSHOT'
 
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'groovy'

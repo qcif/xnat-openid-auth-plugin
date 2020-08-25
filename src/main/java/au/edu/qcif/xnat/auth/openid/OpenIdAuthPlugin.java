@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author <a href='https://github.com/shilob'>Shilo Banihit</a>
  * 
  */
-@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin", log4jPropertiesFile = "xnat-openid-auth-plugin-log4j.properties")
+@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin", log4jPropertiesFile = "au/edu/qcif/xnat/auth/openid/xnat-openid-auth-plugin-logback.xml")
 @EnableWebSecurity
 @EnableOAuth2Client
 @Component
@@ -139,7 +139,12 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	}
 	
 	private boolean isPkceEnabled(String providerId) {
-		return Boolean.parseBoolean(getProperty(providerId, PKCE_ENABLED));
+		String pkceEnabled = getProperty(providerId, PKCE_ENABLED);
+		if (pkceEnabled != null) {
+			pkceEnabled = pkceEnabled.trim();
+		}
+		log.debug("Is PKCE Enabled: " + pkceEnabled + "(" + Boolean.parseBoolean(pkceEnabled) + ")");
+		return Boolean.parseBoolean(pkceEnabled);
 	}
 
 	private AuthenticationProviderConfigurationLocator _locator;
@@ -229,7 +234,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		details.setScope(Arrays.asList(scopes));
 		details.setPreEstablishedRedirectUri(preEstablishedUri);
 		details.setUseCurrentUri(false);
-		details.setPkceEnabled(this.isPkceEnabled(providerId));
+		details.setPkceEnabled(isPkceEnabled(providerId));
 		return details;
 	}
 
