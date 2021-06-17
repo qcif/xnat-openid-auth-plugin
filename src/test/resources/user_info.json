@@ -1,0 +1,6 @@
+{
+  "given_name": "John",
+  "family_name": "Doe",
+  "email": "john.doe@example.org",
+  "email_verified": true
+}

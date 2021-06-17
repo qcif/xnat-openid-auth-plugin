@@ -26,13 +26,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
+
 import org.nrg.xdat.security.helpers.Users;
+import org.nrg.xdat.security.services.UserManagementServiceI;
 import org.nrg.xdat.security.user.exceptions.UserInitException;
 import org.nrg.xdat.security.user.exceptions.UserNotFoundException;
 import org.nrg.xft.event.EventDetails;
 import org.nrg.xft.event.EventUtils;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.security.exceptions.NewAutoAccountNotAutoEnabledException;
+import org.springframework.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -122,6 +125,13 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 			final Jwt tokenDecoded = JwtHelper.decode(idToken);
 			log.debug("===== : " + tokenDecoded.getClaims());
 			final Map<String, String> authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
+
+            String userInfoUri = plugin.getProperty(providerId, "userInfoUri");
+            if (! StringUtils.isEmpty(userInfoUri)) {
+                Map<String, String> userInfo = this.getUserInfo(accessToken.getValue(), userInfoUri);
+                authInfo.putAll(userInfo);
+            }
+
 			final OpenIdConnectUserDetails user = new OpenIdConnectUserDetails(providerId, authInfo, accessToken,
 					plugin);
 
@@ -137,9 +147,10 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 						"OpenID user is not on the enabled list.", user));
 			}
 			log.debug("Checking if user exists...");
+            UserManagementServiceI userManagementServiceInstance = getUserManagementServiceInstance();
 			UserI xdatUser;
 			try {
-				xdatUser = Users.getUser(user.getUsername());
+				xdatUser = userManagementServiceInstance.getUser(user.getUsername());
 				if (xdatUser.isEnabled()) {
 					log.debug("User is enabled...");
 					return new OpenIdAuthToken(xdatUser, "openid");
@@ -153,7 +164,7 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 				String userAutoEnabled = plugin.getProperty(providerId, "userAutoEnabled");
 				String userAutoVerified = plugin.getProperty(providerId, "userAutoVerified");
 
-				xdatUser = Users.createUser();
+				xdatUser = userManagementServiceInstance.createUser();
 				xdatUser.setEmail(user.getEmail());
 				xdatUser.setLogin(user.getUsername());
 				xdatUser.setFirstname(user.getFirstname());
@@ -167,8 +178,8 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 					EventDetails ev = new EventDetails(EventUtils.CATEGORY.PROJECT_ACCESS, EventUtils.TYPE.PROCESS,
 							"added new user", "new user logged in", "OpenID connect new user");
 					try {
-						UserI adminUser = Users.getUser("admin");
-						Users.save(xdatUser, adminUser, true, ev);
+						UserI adminUser = userManagementServiceInstance.getUser("admin");
+						userManagementServiceInstance.save(xdatUser, adminUser, true, ev);
 					} catch (Exception e) {
 						log.debug("Ignoring exception:");
 						e.printStackTrace();
@@ -202,9 +213,22 @@ public class OpenIdConnectFilter extends AbstractAuthenticationProcessingFilter 
 		return false;
 	}
 
+    protected UserManagementServiceI getUserManagementServiceInstance() {
+        return Users.getUserManagementService();
+    }
+
 	private boolean shouldFilterEmailDomains(String providerId) {
 		return Boolean.parseBoolean(plugin.getProperty(providerId, "shouldFilterEmailDomains"));
 	}
+
+    private Map<String, String> getUserInfo(String accessToken, String userInfoEndpoint) throws IOException {
+        // See https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + accessToken);
+        HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+        return restTemplate.exchange(userInfoEndpoint, HttpMethod.GET, requestEntity, Map.class).getBody();
+    }
 
 	private static class NoopAuthenticationManager implements AuthenticationManager {
 
