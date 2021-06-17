@@ -14,6 +14,9 @@ import org.nrg.xdat.security.user.exceptions.UserNotFoundException;
 import org.nrg.xft.security.UserI;
 import org.nrg.xnat.security.provider.AuthenticationProviderConfigurationLocator;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.jwt.crypto.sign.MacSigner;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
@@ -21,6 +24,8 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.AccessTokenRequest;
 import org.springframework.security.oauth2.client.token.DefaultAccessTokenRequest;
+
+import au.edu.qcif.xnat.auth.openid.pkce.PkceAuthorizationCodeAccessTokenProvider;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -44,15 +49,10 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class OpenIdConnectFilterTest {
 
     private OpenIdConnectFilter subject;
     private ObjectMapper objectMapper = new ObjectMapper();
-
-    final Logger logger = LoggerFactory.getLogger(OpenIdConnectFilterTest.class);
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8080);
@@ -75,9 +75,8 @@ public class OpenIdConnectFilterTest {
             }
         };
 
-        logger.info("Hello world");
-
         HttpServletRequest mockRequest = new MockHttpServletRequest();
+
         ((MockHttpServletRequest) mockRequest).setParameter("providerId", "test");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest));
 
@@ -99,7 +98,7 @@ public class OpenIdConnectFilterTest {
     @Test
     public void attemptAuthentication() throws Exception {
         stubFor(post(urlEqualTo("/auth")).willReturn(aResponse().withStatus(302)
-                .withHeader("Location", "http://localhost?code=code")));
+                .withHeader("Location", "http://localhost:8080?code=code")));
 
         String idToken = JwtHelper.encode(readFile("id_token.json"),
                 new MacSigner("secret")).getEncoded();
@@ -118,21 +117,22 @@ public class OpenIdConnectFilterTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(readFile("user_info.json"))));
 
-        //MockHttpServletRequest request = new MockHttpServletRequest();
-        //request.getSession().setAttribute("providerId", "test");
+        HttpServletRequest request = (HttpServletRequest) new MockHttpServletRequest();
+        HttpServletResponse response = (HttpServletResponse) new MockHttpServletResponse();
 
-        //when(this.userManagementService.getUser("test_1234567890")).thenThrow(UserNotFoundException.class);
-        //UserI user = mock(UserI.class);
-        //when(this.userManagementService.createUser()).thenReturn(user);
+        request.getSession().setAttribute("providerId", "test");
 
-        //subject.attemptAuthentication(request, new MockHttpServletResponse());
+        when(this.userManagementService.getUser("test_1234567890")).thenThrow(UserNotFoundException.class);
+        UserI user = mock(UserI.class);
+        when(this.userManagementService.createUser()).thenReturn(user);
 
-        //ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        //Mockito.verify(user).setEmail(argumentCaptor.capture());
+        subject.attemptAuthentication(request, response);
 
-        //String email = argumentCaptor.getValue();
-        //assertEquals("john.doe@example.org", email);
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(user).setEmail(argumentCaptor.capture());
 
+        String email = argumentCaptor.getValue();
+        assertEquals("john.doe@example.org", email);
     }
 
     private String readFile(String fileName) throws IOException {

@@ -69,7 +69,8 @@ dependencies {
     compile "org.slf4j:slf4j-api"
 
     testImplementation "junit:junit"
-    testImplementation "org.springframework:spring-test"
+    testImplementation "org.springframework:spring-test" 
+    testImplementation "org.nrg.xnat:web:${vXnat}"  
     testImplementation "com.github.tomakehurst:wiremock:2.21.0"
     testImplementation "org.mockito:mockito-core:2.25.0"
 }

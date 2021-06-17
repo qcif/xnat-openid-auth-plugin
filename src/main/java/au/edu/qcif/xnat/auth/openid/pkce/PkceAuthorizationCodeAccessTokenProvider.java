@@ -75,11 +75,14 @@ public class PkceAuthorizationCodeAccessTokenProvider extends AuthorizationCodeA
 		form.set("grant_type", "authorization_code");
 		form.set("code", request.getAuthorizationCode());
 
-		PreservedState preservedState = (PreservedState) request.getPreservedState();
+		Object preservedState = request.getPreservedState();
 
 		if (resource.isPkceEnabled()) {
-			form.set("code_verifier", preservedState.getCodeVerifier());
-			log.debug("code_verifier parameter added");
+			if (preservedState instanceof PreservedState) {
+				PreservedState myPreservedState = (PreservedState)preservedState;
+				form.set("code_verifier", myPreservedState.getCodeVerifier());
+				log.debug("code_verifier parameter added");
+			}
 		}
 		
 		if (request.getStateKey() != null || stateMandatory) {
@@ -98,12 +101,21 @@ public class PkceAuthorizationCodeAccessTokenProvider extends AuthorizationCodeA
 		String redirectUri = null;
 
 		// Get the redirect uri from the stored state
-		if (preservedState != null && preservedState.getRedirectUri() != null) {
-			// Use the preserved state in preference if it is there
-			// TODO: treat redirect URI as a special kind of state (this is a historical mini hack)
-			redirectUri = preservedState.getRedirectUri();
+		if (preservedState != null) {
+			if (preservedState instanceof String) {
+				redirectUri = String.valueOf(preservedState);
+			} else {
+				if (preservedState instanceof PreservedState) {
+					PreservedState myPreservedState = (PreservedState)preservedState;
+
+					if (myPreservedState.getRedirectUri() != null) {
+						redirectUri = myPreservedState.getRedirectUri();
+					}
+				}
+			}
 		}
-		else {
+
+		if (redirectUri == null) {
 			redirectUri = resource.getRedirectUri(request);
 		}
 
