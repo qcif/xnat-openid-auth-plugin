@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ xnat-openid-auth-plugin: logback-test.xml
+  -->
+
+<configuration>
+    <appender name="openId" class="ch.qos.logback.core.FileAppender">
+        <append>false</append>
+        <file>build/test-results/open-id-test.log</file>
+        <encoder>
+            <pattern>%d [%t] %-5p %c - %m%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="au.edu.qcif.xnat.auth.openid" additivity="false" level="DEBUG">
+        <appender-ref ref="openId"/>
+    </logger>
+    <logger name="org.springframework.security" additivity="false" level="INFO">
+        <appender-ref ref="openId"/>
+    </logger>
+</configuration>

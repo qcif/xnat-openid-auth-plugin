@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+
+ openid-auth-plugin: src/main/resources/au/edu/qcif/xnat/auth/openid/openid-auth-plugin-logback.xml
+
+ XNAT OpenID Authentication Provider plugin logging configuration
+
+--> 
+<configuration>
+    <appender name="openid" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>false</append>
+        <file>${xnat.home}/logs/openid.log</file>
+        <encoder>
+            <pattern>%d [%t] %-5p %c - %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${xnat.home}/logs/openid.log.%d{yyyy-MM-dd}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <logger name="au.edu.qcif.xnat.auth.openid" additivity="false" level="INFO">
+        <appender-ref ref="openid"/>
+    </logger>
+</configuration>

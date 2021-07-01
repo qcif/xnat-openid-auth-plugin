@@ -17,7 +17,12 @@
  */
 package au.edu.qcif.xnat.auth.openid;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.nrg.framework.annotations.XnatPlugin;
 import org.nrg.xnat.security.XnatSecurityExtension;
@@ -33,7 +38,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
+import org.springframework.security.oauth2.client.token.AccessTokenProvider;
+import org.springframework.security.oauth2.client.token.AccessTokenProviderChain;
+import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
+import org.springframework.security.oauth2.client.token.grant.implicit.ImplicitAccessTokenProvider;
+import org.springframework.security.oauth2.client.token.grant.password.ResourceOwnerPasswordAccessTokenProvider;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.stereotype.Component;
@@ -41,10 +51,9 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Properties;
+import au.edu.qcif.xnat.auth.openid.pkce.PkceAuthorizationCodeAccessTokenProvider;
+import au.edu.qcif.xnat.auth.openid.pkce.PkceAuthorizationCodeResourceDetails;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * XNAT Authentication plugin.
@@ -52,16 +61,22 @@ import java.util.Properties;
  * @author <a href='https://github.com/shilob'>Shilo Banihit</a>
  * 
  */
-@XnatPlugin(value = "xnat-openid-auth-plugin", name = "XNAT OpenID Authentication Provider Plugin")
+@XnatPlugin(value = "openIdAuthPlugin", name = "XNAT OpenID Authentication Provider Plugin", logConfigurationFile = "au/edu/qcif/xnat/auth/openid/openid-auth-plugin-logback.xml")
 @EnableWebSecurity
 @EnableOAuth2Client
 @Component
 @Slf4j
 public class OpenIdAuthPlugin implements XnatSecurityExtension {
-
+	private static final String PKCE_ENABLED = "pkceEnabled";
+	private static final AccessTokenProvider accessTokenProviderChain = new AccessTokenProviderChain(
+			Arrays.<AccessTokenProvider>asList(new PkceAuthorizationCodeAccessTokenProvider(),
+					// getAuthorizationCodeAccessTokenProvider(pkceEnabled),
+					new ImplicitAccessTokenProvider(),
+					new ResourceOwnerPasswordAccessTokenProvider(),
+					new ClientCredentialsAccessTokenProvider()));
+	
 	@Autowired
-	public void setAuthenticationProviderConfigurationLocator(
-			final AuthenticationProviderConfigurationLocator locator) {
+	public void setAuthenticationProviderConfigurationLocator(final AuthenticationProviderConfigurationLocator locator) {
 		_locator = locator;
 		loadProps();
 	}
@@ -88,13 +103,12 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 				throw new RuntimeException("You must configure an OpenID provider");
 			}
 			if (openIdProviders.size() > 1) {
-				throw new RuntimeException(
-						"This plugin currently only supports one OpenID provider at a time, but I found "
-								+ openIdProviders.size() + " providers defined: "
-								+ StringUtils.join(openIdProviders.keySet(), ", "));
+				throw new RuntimeException("This plugin currently only supports one OpenID provider at a time, but I found "
+						+ openIdProviders.size() + " providers defined: " + StringUtils.join(openIdProviders.keySet(), ", "));
 			}
-            final ProviderAttributes providerDefinition = _locator.getProviderDefinition(openIdProviders.keySet().iterator().next());
-            _props = providerDefinition != null ? providerDefinition.getProperties() : new Properties();
+			final ProviderAttributes providerDefinition = _locator
+					.getProviderDefinition(openIdProviders.keySet().iterator().next());
+			_props = providerDefinition != null ? providerDefinition.getProperties() : new Properties();
 			_inst = this;
 		}
 	}
@@ -113,14 +127,24 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 	@Bean
 	@Scope("prototype")
 	public OpenIdConnectFilter createFilter() {
-        return new OpenIdConnectFilter(getProps().getProperty("preEstablishedRedirUri"), this);
+		return new OpenIdConnectFilter(getProps().getProperty("preEstablishedRedirUri"), this);
 	}
 
+	@Override
 	public void configure(final HttpSecurity http) throws Exception {
 		this.http = http;
+		
 		http.addFilterAfter(new OAuth2ClientContextFilter(), AbstractPreAuthenticatedProcessingFilter.class)
-            .addFilterAfter(createFilter(), OAuth2ClientContextFilter.class);
-
+				.addFilterAfter(createFilter(), OAuth2ClientContextFilter.class);
+	}
+	
+	private boolean isPkceEnabled(String providerId) {
+		String pkceEnabled = getProperty(providerId, PKCE_ENABLED);
+		if (pkceEnabled != null) {
+			pkceEnabled = pkceEnabled.trim();
+		}
+		log.debug("Is PKCE Enabled: " + pkceEnabled + "(" + Boolean.parseBoolean(pkceEnabled) + ")");
+		return Boolean.parseBoolean(pkceEnabled);
 	}
 
 	private AuthenticationProviderConfigurationLocator _locator;
@@ -156,6 +180,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		}
 	}
 
+	@Override
 	public void configure(final AuthenticationManagerBuilder builder) throws Exception {
 
 	}
@@ -175,10 +200,22 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		String providerId = request.getParameter("providerId");
 		log.debug("Provider id is: " + providerId);
 		request.getSession().setAttribute("providerId", providerId);
-		final OAuth2RestTemplate template = new OAuth2RestTemplate(getProtectedResourceDetails(providerId),
-				clientContext);
+		final OAuth2RestTemplate template = new OAuth2RestTemplate(getProtectedResourceDetails(providerId), clientContext);
+        template.setAccessTokenProvider(accessTokenProviderChain);
 		return template;
 	}
+	
+	/*
+	private AuthorizationCodeAccessTokenProvider getAuthorizationCodeAccessTokenProvider(boolean pkceEnabled) {
+		AuthorizationCodeAccessTokenProvider authCodeAccessTokenProvider = new AuthorizationCodeAccessTokenProvider();
+		if (pkceEnabled) {
+			DefaultRequestEnhancer tokenRequestEnhancer = new DefaultRequestEnhancer();
+			tokenRequestEnhancer.setParameterIncludes(Arrays.asList("code_challenge", "code_challenge_method"));
+			authCodeAccessTokenProvider.setTokenRequestEnhancer(tokenRequestEnhancer);
+		}
+		return authCodeAccessTokenProvider;
+	}
+	*/
 
 	public AuthorizationCodeResourceDetails getProtectedResourceDetails(String providerId) {
 		log.debug("Creating protected resource details of provider:" + providerId);
@@ -189,7 +226,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		final String preEstablishedUri = getProps().getProperty("siteUrl")
 				+ getProps().getProperty("preEstablishedRedirUri");
 		final String[] scopes = getProperty(providerId, "scopes").split(",");
-		final AuthorizationCodeResourceDetails details = new AuthorizationCodeResourceDetails();
+		final PkceAuthorizationCodeResourceDetails details = new PkceAuthorizationCodeResourceDetails();
 		details.setClientId(clientId);
 		details.setClientSecret(clientSecret);
 		details.setAccessTokenUri(accessTokenUri);
@@ -197,6 +234,7 @@ public class OpenIdAuthPlugin implements XnatSecurityExtension {
 		details.setScope(Arrays.asList(scopes));
 		details.setPreEstablishedRedirectUri(preEstablishedUri);
 		details.setUseCurrentUri(false);
+		details.setPkceEnabled(isPkceEnabled(providerId));
 		return details;
 	}
 

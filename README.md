@@ -41,6 +41,10 @@ To build the XNAT OpenID authentication provider plugin:
 
 1. Build the plugin jar or download the latest development version [here](http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.edu.qcif.xnat.openid&a=openid-auth-plugin&v=LATEST&e=jar)
 
+1. Optionally run the tests:    
+
+    `./gradlew clean test`
+
 1. Copy the plugin jar to your plugins folder:
 
     `cp build/libs/xnat-openid-auth-plugin-all-1.0.0-SNAPSHOT.jar /data/xnat/home/plugins`
@@ -64,7 +68,7 @@ This plugin will use any entries located in any of those properties files where 
 The following properties control the plugin:
 
 ### enabled
-Comma delimited list of provide ids, currently tested with Google `google` and AAF `aaf`.
+Comma delimited list of provide ids, currently tested with Google `google`, AAF `aaf`, and WUSTL `wustl`.
 
 ### siteUrl
 The main domain, needed to build the full `preEstablishedRedirUri`
@@ -99,11 +103,17 @@ Flag to set the `enabled` property of new users, set to false to allow admins to
 ### openid.`providerId`.userAutoVerified
 Flag to set the `verified` property of new users.
 
+### openid.`providerId`.userInfoUri
+The optional URI of the UserInfo endpoint. If present then a call will be exchanged to this endpoint to collect additional information about the user.
+
 ### openid.`providerId`.*Property
 The property names used to populate user information during user creation. These are the property names from the information returned from the authentication provider.
 
 ### disableUsernamePasswordLogin
 Toggle username & password login visibility on the login form
+
+### openid.`providerId`.pkceEnabled
+Flag to enable the PKCE feature in the authrozation code grant flow.
 
 ## Sample Configuration ##
 
